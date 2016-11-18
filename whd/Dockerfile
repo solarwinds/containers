@@ -11,7 +11,7 @@ ADD http://downloads.solarwinds.com/solarwinds/Release/WebHelpDesk/$PRODUCT_VERS
 RUN gunzip -dv /$GZIP_FILE && yum clean all && yum update -y && yum install -y python-setuptools && easy_install supervisor && yum install -y -v /$RPM_FILE  && rm /$RPM_FILE && yum clean all && cp /usr/local/webhelpdesk/conf/whd.conf.orig /usr/local/webhelpdesk/conf/whd.conf && sed -i 's/^PRIVILEGED_NETWORKS=[[:space:]]*$/PRIVILEGED_NETWORKS=0.0.0.0\/0/g' /usr/local/webhelpdesk/conf/whd.conf
 ADD run.sh /run.sh
 ADD supervisord.conf /home/docker/whd/supervisord.conf
-
+RUN chmod 744 /run.sh
 EXPOSE 8081
 
 ENTRYPOINT ["/run.sh"]
