@@ -4,7 +4,7 @@ FROM centos:latest
 
 MAINTAINER Solarwinds  "vijay.veeraraghavan@solarwinds.com"
 
-ENV CONSOLETYPE=serial PRODUCT_VERSION=12.4.2 PRODUCT_NAME=webhelpdesk-12.4.2.36-1.x86_64.rpm.gz GZIP_FILE=webhelpdesk.rpm.gz RPM_FILE=webhelpdesk.rpm
+ENV CONSOLETYPE=serial PRODUCT_VERSION=12.5.0 PRODUCT_NAME=webhelpdesk-12.5.0.1257-1.x86_64.rpm.gz GZIP_FILE=webhelpdesk.rpm.gz RPM_FILE=webhelpdesk.rpm
 
 ADD functions /etc/rc.d/init.d/functions 
 ADD http://downloads.solarwinds.com/solarwinds/Release/WebHelpDesk/$PRODUCT_VERSION/Linux/$PRODUCT_NAME /$GZIP_FILE
