@@ -1,4 +1,4 @@
-# Version: 0.0.9
+# Version: 0.0.1
 
 FROM centos:latest
 
@@ -13,6 +13,8 @@ ADD install.sh /install.sh
 RUN yum clean all && yum install -y python-setuptools jre && easy_install supervisor  
 
 ADD run.sh /run.sh
+
+RUN chmod 744 /run.sh && chmod 744 /install.sh
 
 ADD supervisord.conf /home/docker/dpa/supervisord.conf
 
