@@ -20,11 +20,28 @@ Option - 1: Docker Image with PostgreSQL database on a seperate container
 
 #Docker compose File
 ```yaml
-
-
+version: "2.0"
+services:
+   db:
+     container_name: postgres-whd
+     image: postgres:alpine
+   whd:
+      container_name: whdinstance
+      environment:
+         EMBEDDED: 'false'
+      build:
+         context: .
+         args:
+            EMBEDDED: 'false'
+      image: vijayveera/whd
+      ports:
+      - "8081:8081"
+      depends_on:
+      - db
 
 ```
-#Docker File - Embedded PostgreSQL 
+
+#Docker File - (Same Dockerfile to build both Embedded PostgreSQL as well as Containerized PostgreSQL
 ```Dockerfile
 # Version: 0.0.9
 
@@ -58,10 +75,16 @@ ENTRYPOINT ["/run.sh"]
 ```
 Here is the docker build command that is used to create WHD Docker image. The tag or image name should match the namespace or username/respository name created on the docker hub account.
 
-#Docker Build 
+#Docker-Compose Build 
 ```sh
-docker build -t solarwinds/whd-embedded:latest .
+docker-compose build -t solarwinds/whd:latest .
 ```
+
+#Docker-Compose Build and run the Application
+```sh
+docker-compose up --build -t solarwinds/whd:latest .
+```
+
 The command to login and push the image to docker hub repository is provided below.
 
 #Docker Push 
@@ -71,19 +94,19 @@ docker login --username={username}
 This will prompt you to enter the docker hub account password. On successfully logging in, you will be able to push the image to the repository 
 
 ```sh
-docker push solarwinds/whd-embedded:latest 
+docker push solarwinds/whd:latest 
 ```
 
 #Docker Pull 
 ```sh
-docker pull solarwinds/whd-embedded[:latest]
+docker pull solarwinds/whd[:latest]
 ```
  
 Once the docker image is built or pulled from docker hub, Here is the docker run command to start the container. This will create WHD container and start the PostgreSQL and start Web Help desk web application on 8081 port. This will run the container in the daemon mode.
 
 #Docker Run 
 ```sh
-docker run -d -p 8081:8081 --name=whdinstance solarwinds/whd-embedded:latest 
+docker run -d -p 8081:8081 --name=whdinstance solarwinds/whd:latest 
 ```
 
 
@@ -91,6 +114,19 @@ Configure WHD Through Browser:
 -----------------------------
 
 Web Help Desk is automatically configured to run Embedded PostgreSQL Database that comes with the WebHelpDesk RPM.
-PostgreSQL is configured to run on the port 20293 and runs on the same container as the WebHelpDesk Application.
+PostgreSQL is configured to run on the port 5432 and runs on the seperate container named "postgres-whd". 
+The port 5423 is exposed internally for the application to talk to the database.
+
+Steps that happens when the container is launched
+-------------------------------------------------
+PostGreSQL gets installed on a seperate container with image named "postgres-whd" and uses port 5432.
+WebhelpDesk gets installed on a container with image named solarwinds/whd and exposes port 8081 for external use.
+The Database name whd and DB Admin and Users are created automatically from solarwinds/whd container using Container Links(ports).
+The WebhelpDesk application is started on the port 8081 and a API call is made to configure WHD Application to use external postgresql DB.
+
+Important
+---------
+Please allow couple of minutes after you launch the container to Start PostgreSQL and WHD Instance and create System Catalogs to keep the Database ready.
+
 
 
