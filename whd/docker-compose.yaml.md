@@ -1,20 +1,29 @@
-solarwinds/whd-embedded:[tag]
+solarwinds/whd:[tag]
 =========
 
-This is a Dockerized version of [WebHelpDesk](http://www.webhelpdesk.com/).  This is based on the RHEL rpm installed on a CentOS 6 base.
+This is a Dockerized version of [WebHelpDesk](http://www.webhelpdesk.com/).  This is based on the RHEL rpm installed on a CentOS Latest base and a seperate container for PostGreSQL that runs on alpine.
 
 The primary purpose of the document is to explain the steps involved in deploying WHD Docker image on to Docker store/hub. This could be first step in exploring the feasibility of moving other products (related and non-related) to Containers to cut down the build and deploy time for products that are under maintenance. Please refer Docker Best Practices for creating Docker file.
 
 Objective
 ---------
 
-The initial objective was to create a WHD Docker image with preinstalled Web Help desk configured and ready to go with the embedded PostgreSQL. This would be offered only on RHEL Based Linux Containers since the WHD RPM is built for RHEL based Linux version. Hence, currently CentOS is being used as the base line OS image for WHD Containers. However, as the second step, PostgreSQL can be hosted on its own container and in that way, WHD can scale horizontally and need not be updated when new version of WHD is released. Also, Database containers can be backed up independent of WHD container and scaled.
+The initial objective was to create a WHD Docker image with Web Help desk configured and ready to go with the PostgreSQL that runs on the seperate container. This would be offered only on RHEL Based Linux Containers since the WHD RPM is built for RHEL based Linux version. Hence, currently CentOS is being used as the base line OS image for WHD Containers. However, PostgreSQL is hosted on its own container and uses Alpine as the base OS image and in that way, WHD can scale horizontally and need not be updated when new version of WHD is released. Also, Database containers can be backed up independent of WHD container and scaled.
+
+The build uses docker-compose file but uses the same Dockerfile to build the WHD image.
+
 
 Options
 ========
-Option - 1: Docker Image with Embedded PostgreSQL database
----------------------------------------------------------
+Option - 1: Docker Image with PostgreSQL database on a seperate container
+-------------------------------------------------------------------------
 
+#Docker compose File
+```yaml
+
+
+
+```
 #Docker File - Embedded PostgreSQL 
 ```Dockerfile
 # Version: 0.0.9
