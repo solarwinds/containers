@@ -1,0 +1,514 @@
+#!/bin/bash
+
+# Web Help Desk
+# Copyright (c) SolarWinds Worldwide, LLC
+#
+# Web Help Desk control script
+#
+
+GREP="grep"
+if [ "`uname`" == "SunOS" ]; then
+	# Solaris requires /usr/xpg4/bin/grep for extended syntax
+	GREP="/usr/xpg4/bin/grep"
+fi
+
+WHOAMI_USER=
+WHOAMI_BIN=/usr/bin/whoami
+if [ ! -e $WHOAMI_BIN ]; then
+	WHOAMI_BIN=/usr/ucb/whoami		# Solaris keeps a BSD-compat implementation here
+fi
+if [ ! -e $WHOAMI_BIN ]; then
+	WHOAMI_USER="root"
+else
+	WHOAMI_USER=`$WHOAMI_BIN`
+fi
+
+function restart_as_root {
+  ARGS="$@"
+  export RESTARTING_AS_ROOT=1
+	sudo -k				# Kill the timeout to guarantee the password prompt
+	sudo -p "Password for user '%u': " $0 $ARGS
+	export RESTARTING_AS_ROOT=0
+	exit 0
+}
+
+function show_usage {
+	echo "   Usage: `basename $0` [-u] start|stop|restart|debug|version [<port_number>]"
+	echo
+	echo "   Use -u to force the Web Help Desk to start under the current user"
+	echo "   rather than switch to root. Requires write access to the following:"
+	echo 
+	echo "      $WHD_HOME/bin/tomcat/conf/"
+	echo "      $WHD_HOME/log/"
+	echo
+	echo "   If -u is not provided, the current user's password will be requested"
+	echo "   in order to switch to root (using sudo)."
+	echo
+}
+
+
+function update_jce_policy_files {
+	# Install Unlimited Strength Cryptography Policy files if necessary (not needed for Java 6)
+	# We also do this in the whd start script, but we do it here in case they're running in WO Monitor.
+	JAVA6_VERSION=`echo "1.6" | sed -e 's;\.;0;g'`
+	VERSION=`$JAVA_HOME/bin/java -version 2>&1 | grep "java version" | awk '{ print substr($3, 2, length($3)-2); }'`
+	VERSION=`echo $VERSION | awk '{ print substr($1, 1, 3); }' | sed -e 's;\.;0;g'`
+	if [[ $VERSION ]]; then
+	    if [[ ! $VERSION -ge $JAVA6_VERSION ]]; then
+				# Java 1.5 needs unlimited strength crypto
+		    if [[ ! -e $JAVA_HOME/lib/security/US_export_policy.jar.whd_java5.bak ]]; then
+					mv $JAVA_HOME/lib/security/US_export_policy.jar $JAVA_HOME/lib/security/US_export_policy.jar.whd_java5.bak
+					mv $JAVA_HOME/lib/security/local_policy.jar $JAVA_HOME/lib/security/local_policy.jar.whd_java5.bak
+				fi
+				cp $WHD_HOME/conf/java5jce/*.jar $JAVA_HOME/lib/security/
+	    fi
+	else
+	    echo "Could not determine java version. May need unlimited strength policy files."
+	fi
+}
+
+USE_SUDO=1
+if [ "$1" == "-u" ]; then
+	USE_SUDO=0
+	shift
+fi
+
+WHD_ARGS=$1
+
+# resolve links - $0 may be a softlink
+PRG="$0"
+while [ -h "$PRG" ] ; do
+	ls=`ls -ld "$PRG"`
+	link=`expr "$ls" : '.*-> \(.*\)$'`
+	if expr "$link" : '.*/.*' > /dev/null; then
+		PRG="$link"
+	else
+		PRG=`dirname "$PRG"`/"$link"
+	fi
+done
+ 
+# get the full path to the WebHelpDesk home 
+if echo $PRG|grep "^/" >/dev/null 2>&1
+then
+	FULLPATH=$PRG
+else
+	THIS_CMD=$PRG
+	if echo $THIS_CMD|grep "^\./" >/dev/null 2>&1
+	then 
+		THIS_CMD=`basename $PRG`
+	fi
+	FULLPATH="`pwd`/$THIS_CMD"
+fi
+
+WHD_BIN_PATH=`dirname "$FULLPATH"`
+export WHD_HOME=`dirname "$WHD_BIN_PATH"`
+
+
+if [ -e $WHD_HOME/version.txt ]; then
+	WHD_VERSION=`cat $WHD_HOME/version.txt`
+else
+	WHD_VERSION="[unknown]"
+fi
+
+# Execute arguments that don't require root permission here
+if [ "$WHD_ARGS" = "version" ]; then
+	echo "Web Help Desk $WHD_VERSION"
+	exit 0
+fi
+
+if [ ! $RESTARTING_AS_ROOT ]; then
+	echo
+	echo "Web Help Desk $WHD_VERSION"
+	echo "Copyright (c) SolarWinds Worldwide, LLC"
+	echo
+	if [ ! "$WHD_ARGS" = "debug" \
+		-a ! "$WHD_ARGS" = "start" \
+		-a ! "$WHD_ARGS" = "stop" \
+		-a ! "$WHD_ARGS" = "restart" \
+		-a ! "$WHD_ARGS" = "debug" \
+		]; then
+		show_usage
+		exit 1
+	fi
+	if [ "$USE_SUDO" == "1" -a "$WHOAMI_USER" != "root" ]; then
+		restart_as_root "$@"
+	fi
+fi
+
+JAVA_HOME=
+JRE_HOME=
+
+if [ ! -e $WHD_HOME/conf/whd.conf ]; then
+  cp $WHD_HOME/conf/whd.conf.orig $WHD_HOME/conf/whd.conf
+fi
+
+. $WHD_HOME/conf/whd.conf
+
+if [ ! $JAVA_HOME ]; then
+  case `uname -s` in
+    "Darwin") JAVA_HOME="$WHD_HOME/bin/jre" ;;
+    "Linux") JAVA_HOME="$WHD_HOME/bin/jre" ;;
+    "SunOS") JAVA_HOME="/usr/java" ;;
+  esac
+fi
+export JAVA_HOME
+
+if [ ! $DATABASE_CONNECTIONS ]; then
+	DATABASE_CONNECTIONS=10
+fi
+
+if [ ! $NO_REDIRECT ]; then
+	NO_REDIRECT=false
+fi
+
+if [ ! $MAIL_NOTIFICATION_PORT ]; then
+	  MAIL_NOTIFICATION_PORT=-1
+fi
+
+# if MAXIMUM_PERM_MEMORY value is less then 256 set it to 256, otherwise leave the higher value
+if [ ! $MAXIMUM_PERM_MEMORY ] || [ ${#MAXIMUM_PERM_MEMORY} -lt 3 ] || ( [ ${#MAXIMUM_PERM_MEMORY} -eq 3 ] && [ "$MAXIMUM_PERM_MEMORY" \< "256" ] ); then
+	MAXIMUM_PERM_MEMORY=256
+fi
+echo "Using XX:MaxPermSize=$MAXIMUM_PERM_MEMORY"
+
+if [ ! $TOMCAT_SERVER_PORT ]; then
+	TOMCAT_SERVER_PORT=23010
+fi
+
+if [ "$JAVA_OPTS" ]; then
+	echo
+	echo "Using additional JVM options: $JAVA_OPTS"
+fi
+
+# For Linux we need to redirect the Java System Preferences to a unified location, otherwise
+# Gen3 framework may not work correctly when JAVA_HOME is changed.
+if [ `uname -s` == "Linux" ]; then
+	JAVA_SYSTEM_PREFS_OVERRIDE_DIR="${WHD_HOME}/conf"
+	if [ ! -d "${JAVA_SYSTEM_PREFS_OVERRIDE_DIR}/.systemPrefs" ]; then
+		mkdir "${JAVA_SYSTEM_PREFS_OVERRIDE_DIR}/.systemPrefs"
+		if [ $? -ne 0 ]; then
+			echo "Warning: Failed to create Java System Preference directory. Location of the"
+			echo "         Java System Properties will be dependent on the Java binary you run."
+		fi
+	fi
+	JAVA_OPTS="-Djava.util.prefs.systemRoot=\"${JAVA_SYSTEM_PREFS_OVERRIDE_DIR}\" ${JAVA_OPTS}"
+fi
+
+# remove any spaces in the privileged networks list so that
+# the entire list is treated as a single parameter in the
+# call to start Tomcat
+#
+# IMPORTANT: If the list contains spaces, it must be enclosed
+# in quotes in whd.conf; otherwise, the variable will be set 
+# with the empty string when it is sourced above.
+PRIVILEGED_NETWORKS=`echo "$PRIVILEGED_NETWORKS" | sed -e "s/ //g"`
+
+export JAVA_OPTS="-Djava.awt.headless=true \
+	-Xms${MINIMUM_MEMORY}m -Xmx${MAXIMUM_MEMORY}m -XX:MaxPermSize=${MAXIMUM_PERM_MEMORY}m \
+	-Dorg.apache.tomcat.util.http.ServerCookie.ALLOW_HTTP_SEPARATORS_IN_V0=true \
+	-Dwhd.stdDeploy=true \
+	-DWHDFingerPort=${MAIL_NOTIFICATION_PORT} \
+	-DWHDPrivilegedNetworks=\"${PRIVILEGED_NETWORKS}\" \
+	-DWHDconnections=\"${DATABASE_CONNECTIONS}\" \
+	-Dlogback.configurationFile=\"$WHD_HOME/conf/logback-config.xml\" \
+	-DWHDWebObjectsMonitorDeployment=false \
+	-Dwebobjects.user.dir=\"${WHD_HOME}/bin/webapps/helpdesk\" \
+	${JAVA_OPTS}"
+
+export CATALINA_HOME="$WHD_HOME/bin/tomcat"
+export CATALINA_PID="$WHD_HOME/log/.whd.pid"
+export CLASSPATH="$WHD_HOME/bin/webapps/helpdesk/WEB-INF/lib/MDSUnicode.jar"
+export CATALINA_LOG="$WHD_HOME/log/catalina.out"
+export JAVA_ENDORSED_DIRS="$WHD_HOME/conf/endorsed"
+
+if [ "$WHD_ARGS" = "debug" ]; then
+	CATALINA_ARGS="run"
+	WHD_ARGS="start"
+	echo "DEBUG MODE: Debug messages will be written to standard out."
+	echo "Press Ctrl-C to stop."
+	echo
+else
+	CATALINA_ARGS="start"
+fi
+
+if [ "$WHD_ARGS" = "start" ]; then
+	if [ "$2" ]; then
+		case $2 in
+		*[!0-9]) 
+           echo "Invalid port number."
+           echo
+           exit ;;
+		*) 
+			WHD_PORT=$2
+		esac
+	else
+		if [ "$DEFAULT_PORT" ]; then
+			WHD_PORT=$DEFAULT_PORT
+		else
+			WHD_PORT=
+		fi 
+	fi
+	if [ ! "$WHD_PORT" -a ! "$HTTPS_PORT" ]; then
+		echo
+		echo "ERROR: No port specified in $WHD_HOME/conf/whd.conf."
+		echo "       Specify DEFAULT_PORT, HTTPS_PORT, or both."
+		echo
+		exit 1
+	fi
+
+	# -----------------------------------------------------------------
+	# Start the PostgreSQL server
+	if [ "$(uname -s)" = "Linux" -a "$EMBEDDED" = "true" ]; then
+		$WHD_HOME/bin/pgsql/etc/rc.d/init.d/postgresql-9.2 start
+	fi
+
+	# -----------------------------------------------------------------
+	# Perform any necessary cleanup
+	if [ -e $WHD_HOME/bin/tomcat/common/lib/naming-common.jar ]; then
+		# Old jar file; conflicts with new naming-resources.jar
+		rm $WHD_HOME/bin/tomcat/common/lib/naming-common.jar
+	fi
+
+	# Remove old ecj jars, introduced with 12.4.1 as fix after Java 8 VM conflict
+	ls -1 "$WHD_HOME/bin/tomcat/lib/"ecj-*.jar | sed 's/\.jar//g' | sort | sed '$d' | while read line; do rm -r "${line}.jar"; done;
+
+	if [ -e $WHD_HOME/bin/webapps/helpdesk/WEB-INF/Library/Frameworks/MacsDesignWidgets.framework/Resources/Java/mail.jar ]; then
+		# mail.jar and activation.jar are now located in WEB-INF/lib because mail.jar
+		# must be loaded by same classloader that loads activation frameworks, and
+		# Java 6 includes the activation framework.
+		rm $WHD_HOME/bin/webapps/helpdesk/WEB-INF/Library/Frameworks/MacsDesignWidgets.framework/Resources/Java/mail.jar 
+		rm $WHD_HOME/bin/webapps/helpdesk/WEB-INF/Library/Frameworks/MacsDesignWidgets.framework/Resources/Java/activation.jar 
+	fi
+
+	# nh 6/30/09: xerces-1.2.3.jar has been replaced with xerces.jar in order to facilitate replacement updates in later versions
+	if [ -e $WHD_HOME/bin/webapps/helpdesk/WEB-INF/lib/xerces-1.2.3.jar ]; then
+		rm $WHD_HOME/bin/webapps/helpdesk/WEB-INF/lib/xerces-1.2.3.jar >/dev/null 2>&1
+		rm $WHD_HOME/bin/webapps/helpdesk/WEB-INF/Library/WebObjects/Extensions/xerces-1.2.3.jar >/dev/null 2>&1
+	fi
+
+	# Remove any hidden jar files in the WEB-INF/lib folders
+	# These seem to appear only on Solaris systems. Not sure yet how they get there.
+
+	rm $WHD_HOME/bin/webapps/helpdesk/WEB-INF/lib/._*.jar >/dev/null 2>&1
+	
+	# Copy over unlimited strength crypto policy files if necessary
+	# No longer needed with bundled Java 1.7
+	#update_jce_policy_files
+
+	# Wipe the Tomcat temp folder
+	if [[ -e $WHD_HOME/bin/tomcat/temp ]]; then
+		rm -rf $WHD_HOME/bin/tomcat/temp/*
+	fi
+
+	# -----------------------------------------------------------------
+	# Create files from originals if necessary
+	
+	SERVER_XML_TEMPLATE="$WHD_HOME/conf/tomcat_server_template.xml"
+	SERVER_XML_OUTPUT="$CATALINA_HOME/conf/server.xml"
+	WEB_XML_TEMPLATE="$WHD_HOME/conf/tomcat_web_template.xml"
+	WEB_XML_OUTPUT="$WHD_HOME/bin/webapps/helpdesk/WEB-INF/web.xml"
+	
+	cp $SERVER_XML_TEMPLATE $SERVER_XML_OUTPUT
+	cp $WEB_XML_TEMPLATE $WEB_XML_OUTPUT
+
+	EXCHANGE_KEYSTORE="$WHD_HOME/conf/exchange_keystore"
+	if [ ! -e $EXCHANGE_KEYSTORE ]; then
+		cp ${EXCHANGE_KEYSTORE}.orig $EXCHANGE_KEYSTORE
+	fi
+
+	if [ $IP_ADDRESS ];  then
+		ADDRESS_DESC="$IP_ADDRESS:"
+	else
+		ADDRESS_DESC="port "
+	fi
+
+
+	sed -e "s/@@@TOMCAT_SERVER_PORT@@@/$TOMCAT_SERVER_PORT/" $SERVER_XML_OUTPUT > $SERVER_XML_OUTPUT.1 2>&1 /dev/null
+	mv $SERVER_XML_OUTPUT.1 $SERVER_XML_OUTPUT
+
+	# -----------------------------------------------------------------
+	# Make Helpdesk.woa.properties readable and writeable by owner only
+	WHD_DB_PROPS=$WHD_HOME/conf/.whd.properties
+	touch $WHD_DB_PROPS >/dev/null 2>&1
+	chmod 600 $WHD_DB_PROPS >/dev/null 2>&1
+
+	# -----------------------------------------------------------------
+	# Create HTTP connector
+
+	if [ $WHD_PORT ]; then
+
+	  echo "Starting the Web Help Desk on ${ADDRESS_DESC}${WHD_PORT}..."
+		echo
+		sed -e "s/@@@WEBHELPDESK_PORT@@@/$WHD_PORT/" $SERVER_XML_OUTPUT \
+			> $SERVER_XML_OUTPUT.1 2>&1 /dev/null
+		sed -e "s/@@@WEBHELPDESK_HTTP_START@@@/-->/" $SERVER_XML_OUTPUT.1 \
+			> $SERVER_XML_OUTPUT 2>&1 /dev/null
+		sed -e "s/@@@WEBHELPDESK_HTTP_STOP@@@/<!--/" $SERVER_XML_OUTPUT \
+			> $SERVER_XML_OUTPUT.1 2>&1 /dev/null
+		mv $SERVER_XML_OUTPUT.1 $SERVER_XML_OUTPUT
+	fi
+
+	# -----------------------------------------------------------------
+	# Create SSL connector
+
+	if [ $HTTPS_PORT ]; then
+
+		echo "Starting an SSL connection to the Web Help Desk on ${ADDRESS_DESC}${HTTPS_PORT}..."
+		echo "(See README.txt for information regarding SSL connections.)"
+		echo
+
+		# make sure a keystore file has been provided
+		KEYSTORE_FILE=$KEYSTORE_FILE
+		if [ ! $KEYSTORE_FILE ]; then
+			KEYSTORE_FILE=$WHD_HOME/conf/keystore.jks
+		fi
+		KEYSTORE_PASS=$KEYSTORE_PASSWORD
+		if [ ! $KEYSTORE_PASS ]; then
+			KEYSTORE_PASS="changeit"
+		fi
+		KEYSTORE_TYPE=$KEYSTORE_TYPE
+		if [ ! $KEYSTORE_TYPE ]; then
+			KEYSTORE_TYPE="JKS"
+		fi
+
+		if [ ! -e $KEYSTORE_FILE ]; then
+
+			echo
+			echo "Could not find keystore at $KEYSTORE_FILE."
+			echo "(A keystore is required for SSL.)"
+			echo "Creating default keystore. Storing new self-signed, anonymous"
+			echo "certificate for alias 'tomcat' with a password of '$KEYSTORE_PASS'."
+			echo "See README.txt for information on changing the certificate."
+			echo
+
+			$JAVA_HOME/bin/keytool -genkey -keystore $KEYSTORE_FILE -alias tomcat -keyalg RSA -dname "CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown" -keypass $KEYSTORE_PASS -storepass $KEYSTORE_PASS -validity 712
+			ERROR_CODE=$?
+			if [ ! $ERROR_CODE -eq 0 ]; then
+				echo
+				echo "ERROR: Could not create keystore."
+				echo
+				exit 1
+			fi
+
+		fi
+
+		sed -e "s/@@@WEBHELPDESK_SSL_PORT@@@/$HTTPS_PORT/" $SERVER_XML_OUTPUT > $SERVER_XML_OUTPUT.1 2>&1 /dev/null
+		sed -e "s/@@@WEBHELPDESK_SSL_START@@@/-->/" $SERVER_XML_OUTPUT.1 > $SERVER_XML_OUTPUT 2>&1 /dev/null
+		sed -e "s/@@@WEBHELPDESK_SSL_STOP@@@/<!--/" $SERVER_XML_OUTPUT > $SERVER_XML_OUTPUT.1 2>&1 /dev/null
+		sed -e "s#@@@WEBHELPDESK_KEYSTORE@@@#$KEYSTORE_FILE#" $SERVER_XML_OUTPUT.1 > $SERVER_XML_OUTPUT 2>&1 /dev/null
+		sed -e "s/@@@WEBHELPDESK_KEYSTORE_PASS@@@/$KEYSTORE_PASS/" $SERVER_XML_OUTPUT > $SERVER_XML_OUTPUT.1 2>&1 /dev/null
+		sed -e "s/@@@WEBHELPDESK_KEYSTORE_TYPE@@@/$KEYSTORE_TYPE/" $SERVER_XML_OUTPUT.1 > $SERVER_XML_OUTPUT 2>&1 /dev/null
+		rm $SERVER_XML_OUTPUT.1
+		#mv $SERVER_XML_OUTPUT.1 $SERVER_XML_OUTPUT
+	fi
+	
+	# -----------------------------------------------------------------
+	# If both HTTP and HTTPS are enabled, turn on automatic forwarding from HTTP to HTTPS
+	if [[ "$NO_REDIRECT" != "true" && $WHD_PORT && $HTTPS_PORT ]]; then
+		sed -e "s/@@@WHD_SSL_FORWARDING_BEGIN@@@/-->/" $WEB_XML_OUTPUT > $WEB_XML_OUTPUT.1 2>&1 /dev/null
+		sed -e "s/@@@WHD_SSL_FORWARDING_END@@@/<!--/" $WEB_XML_OUTPUT.1 > $WEB_XML_OUTPUT 2>&1 /dev/null
+		rm $WEB_XML_OUTPUT.1
+		#mv $WEB_XML_OUTPUT.1 $WEB_XML_OUTPUT
+	fi
+	
+	# -----------------------------------------------------------------
+	# Set up base URL for private Spring/WebObjects communication
+	if [ $HTTPS_PORT ]; then
+		PRIVATE_BASE_URL="https://127.0.0.1:${HTTPS_PORT}"
+	else
+		PRIVATE_BASE_URL="http://127.0.0.1:${WHD_PORT}"
+	fi
+
+
+	# -----------------------------------------------------------------
+	# Set up port overrides
+	if [ ! $URL_DEFAULT_PORT ]; then
+		URL_DEFAULT_PORT=$WHD_PORT
+		if [ ! $URL_DEFAULT_PORT ]; then
+			URL_DEFAULT_PORT=-1
+		fi
+			
+	fi
+	if [ ! $URL_HTTPS_PORT ]; then
+		URL_HTTPS_PORT=$HTTPS_PORT
+		if [ ! $URL_HTTPS_PORT ]; then
+			URL_HTTPS_PORT=-1
+		fi
+	fi
+	export JAVA_OPTS="${JAVA_OPTS} -DWHDPort=${URL_DEFAULT_PORT} -DWHDSecurePort=${URL_HTTPS_PORT} -DWODisplayExceptionPages=true -DWHDPrivateBaseUrl=${PRIVATE_BASE_URL}"
+
+	# -----------------------------------------------------------------
+	# Set up mail notification server
+
+	if [ ! "$MAIL_NOTIFICATION_PORT" -eq "-1" ]; then
+		$JAVA_HOME/bin/java -jar $WHD_HOME/bin/PortCheck.jar $MAIL_NOTIFICATION_PORT
+		if [ ! $? -eq 0 ]; then
+			echo "Unable to start mail notification (finger) server on port $MAIL_NOTIFICATION_PORT."
+		else
+			echo "Starting mail notification (finger) server on port $MAIL_NOTIFICATION_PORT..."
+		fi
+		echo
+	fi
+
+	# -----------------------------------------------------------------
+	# Set the SSL port to use for redirecting to HTTPS
+	# and set the address to bind to (if specified)
+
+	if [ $HTTPS_PORT ]; then
+		REDIRECT_PORT=$HTTPS_PORT
+	else
+		REDIRECT_PORT=443
+	fi
+
+	ADDRESS_SETTING=""
+	if [ $IP_ADDRESS ];  then
+		ADDRESS_SETTING="address=\"$IP_ADDRESS\""
+	fi
+	sed -e "s/@@@WEBHELPDESK_REDIRECT_PORT@@@/$REDIRECT_PORT/" $SERVER_XML_OUTPUT \
+	  > $SERVER_XML_OUTPUT.1 2>&1 /dev/null
+	sed -e "s/@@@WEBHELPDESK_ADDRESS@@@/$ADDRESS_SETTING/" $SERVER_XML_OUTPUT.1 \
+	  > $SERVER_XML_OUTPUT 2>&1 /dev/null
+
+  ERROR_CODE=$?
+  if [ ! $ERROR_CODE -eq 0 ]; then
+    echo
+    echo "ERROR: Could not write to $SERVER_XML_OUTPUT."
+    echo
+    exit 1
+  fi
+
+  CATALINA_COMMAND="$CATALINA_HOME/bin/catalina.sh $CATALINA_ARGS"
+
+  #echo "Using command $CATALINA_COMMAND"
+  . $CATALINA_COMMAND
+
+elif [ "$WHD_ARGS" = "stop" ]; then
+  echo "Stopping the Web Help Desk..."
+  echo
+  $CATALINA_HOME/bin/shutdown.sh > /dev/null 2>&1
+
+	# To be sure of shutdown, kill by PID
+	if [ -e $CATALINA_PID ]; then
+		kill `cat $CATALINA_PID` > /dev/null 2>&1
+		rm $CATALINA_PID > /dev/null
+	fi
+
+	# -----------------------------------------------------------------
+	# Halt the PostgreSQL server
+	if [ "$(uname -s)" = "Linux" -a "$EMBEDDED" = "true" ]; then
+		$WHD_HOME/bin/pgsql/etc/rc.d/init.d/postgresql-9.2 stop
+	fi
+      
+elif [ "$WHD_ARGS" = "restart" ]; then
+  echo "Restarting the Web Help Desk..."
+	shift
+	WHD_ARGS=$1
+  $PRG stop $WHD_ARGS >/dev/null 2>&1
+	sleep 3
+  $PRG start $WHD_ARGS #>/dev/null 2>&1
+else
+	echo "Invalid argument."
+	show_usage
+	exit 1
+fi
+
