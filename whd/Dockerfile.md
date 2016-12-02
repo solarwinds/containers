@@ -87,9 +87,9 @@ PostgreSQL is configured to run on the port 20293 and runs on the same container
 
 Steps that happens when the container is launched
 -------------------------------------------------
-PostGreSQL is automatically installed and started by WebHelpDesk RPM on the same container and uses port 5432.
-WebhelpDesk gets installed on the same container with image named solarwinds/whd and exposes port 8081 for external use.
-The Database name whd and DB Admin and Users are created automatically from solarwinds/whd container.
+PostGreSQL is automatically installed and started by WebHelpDesk RPM on the same container and uses port 20293.
+WebhelpDesk gets installed on the same container with image named solarwinds/whd-embedded and exposes port 8081 for external use.
+The Database name whd and DB Admin and Users are created automatically from solarwinds/whd-embedded container.
 The WebhelpDesk application is started on the port 8081 and a API call is made to configure WHD Application to use embedded postgresql DB.
 
 Important
