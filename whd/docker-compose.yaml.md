@@ -33,7 +33,7 @@ services:
          context: .
          args:
             EMBEDDED: 'false'
-      image: vijayveera/whd
+      image: solarwinds/whd
       ports:
       - "8081:8081"
       depends_on:
