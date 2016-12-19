@@ -10,13 +10,12 @@ Objective
 
 The initial objective was to create a WHD Docker image with Web Help desk configured and ready to go with the PostgreSQL that runs on the seperate container. This would be offered only on RHEL Based Linux Containers since the WHD RPM is built for RHEL based Linux version. Hence, currently CentOS is being used as the base line OS image for WHD Containers. However, PostgreSQL is hosted on its own container and uses Alpine as the base OS image and in that way, WHD can scale horizontally and need not be updated when new version of WHD is released. Also, Database containers can be backed up independent of WHD container and scaled.
 
+This is the docker compose YAML file that will be used by Engineering to build whd image. Basically, the main difference between option 1 and 2 is the environment variable "EMBEDDED". When you are creating the solarwinds/whd-embedded image, it sets EMBEDDED to true and as a result the container will start the PostgreSQL with in the same container. While building solarwinds/whd image using the compose, it sets the EMBEDDED to false and build the solarwinds/whd image using the same Dockerfile. When this is used to build the image, it does not start the PostgreSQL with in the same container and establishes port connectivity between PostgreSQL container that runs on alpine Linux and WHD container that runs tomcat on CentOS.
+
 The build uses docker-compose file but uses the same Dockerfile to build the WHD image.
 
-
-Options
-========
-Option - 1: Docker Image with PostgreSQL database on a seperate container
--------------------------------------------------------------------------
+Option: Docker Image with PostgreSQL database on a seperate container
+===========================
 
 #Docker compose File
 ```yaml
@@ -102,13 +101,32 @@ docker push solarwinds/whd:latest
 docker pull solarwinds/whd[:latest]
 ```
  
-Once the docker image is built or pulled from docker hub, Here is the docker run command to start the container. This will create WHD container and start the PostgreSQL and start Web Help desk web application on 8081 port. This will run the container in the daemon mode.
+Once the docker image is built or pulled from docker hub, Here is the docker run command to start the container. This will create WHD container and start the PostgreSQL on a seperate container and start Web Help desk web application on 8081 port. This will run the container in the daemon mode.
 
-#Docker Run 
+#Docker Compose Run 
 ```sh
-docker run -d -p 8081:8081 --name=whdinstance solarwinds/whd:latest 
+docker-compose up [-d]
 ```
 
+#YAML file to be run on the Customer Docker instance
+```sh
+version: "2.0"
+services:
+   db:
+     container_name: postgres-whd
+     image: postgres:alpine
+   whd:
+      container_name: whdinstance
+      environment:
+         EMBEDDED: 'false'
+      image: solarwinds/whd
+      ports:
+      - "8081:8081"
+      depends_on:
+      - db
+```
+
+Copy the above lines and create an YAML file on the linux server containing docker instance and use the docker-compose up command.
 
 Configure WHD Through Browser:
 -----------------------------
