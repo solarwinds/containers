@@ -36,6 +36,11 @@ Here is the docker build command that is used to create DPA Docker image. The ta
 ```sh
 docker build -t solarwinds/dpa:latest .
 ```
+
+#Note
+
+Currently, DPA does not allow silent install, so when you build docker image, you cannot install the dpa application. So it has to be done from with in the container itself and issue a docker commit to update the image before pushing it to docker hub
+
 The command to login and push the image to docker hub repository is provided below.
 
 #Docker Push 
