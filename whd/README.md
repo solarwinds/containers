@@ -77,6 +77,23 @@ Once the docker image is built or pulled from docker hub, Here is the docker run
 docker run -d -p 8081:8081 --name=whdinstance solarwinds/whd-embedded:latest 
 ```
 
+Ideally you would want the Data to be stored outside the Application container. So that when the container is upgraded or removed, the data still exists on the host. In order to create a seperate mount point for the Data directory, create a directory to store data on the host
+
+```sh
+cd /
+mkdir data
+cd /data
+mkdir whd_postgres_data
+```
+
+Use the following Docker run command to mount volume when launching the container instance
+
+#Docker Run with mount
+```sh
+docker run -d -p 8081:8081 --name=whdinstance -v /data/whd_postgres_data:/usr/local/webhelpdesk/bin/pgsql/var/lib/pgsql/9.2/data  solarwinds/whd-embedded:latest 
+```
+-v /data/whd_postgres_data:/usr/local/webhelpdesk/bin/pgsql/var/lib/pgsql/9.2/data means we mount /data/whd_postgres_data as a volume. This is very important. It's safe to keep database files in the host.
+
 Configure WHD Through Browser:
 -----------------------------
 
@@ -164,6 +181,53 @@ services:
 ```
 
 Copy the above lines and create an YAML file on the linux server containing docker instance and use the docker-compose up command.
+
+#Docker-Compose Run 
+```sh
+docker-compose up --build -t solarwinds/whd:latest .
+```
+
+Ideally you would want the Data to be stored outside the Application or postgreSQL container. So that when the container is upgraded or removed, the data still exists on the host. In order to create a seperate mount point for the Data directory, create a directory to store data on the host
+
+```sh
+cd /
+mkdir data
+cd /data
+mkdir whd_postgres_data
+```
+
+Use the following Docker run command to mount volume when launching the container instance
+
+#YAML file to be run on the Customer Docker instance using external mount
+
+docker-compose.yaml to be run on the Customer Docker Instance using the mount point that stores Data on the host
+
+```sh 
+version: "2.0"
+services:
+   db:
+     container_name: postgres-whd
+     image: postgres:alpine
+     volumes:
+      - whd_postgres_data:/var/lib/postgresql/data
+   whd:
+      container_name: whdinstance
+      environment:
+         EMBEDDED: 'false'
+      image: solarwinds/whd
+      ports:
+      - "8081:8081"
+      depends_on:
+      - db
+volumes:
+  whd_postgres_data:
+    driver: local
+```
+
+volumes:
+   - whd_postgres_data:/var/lib/postgresql/data
+
+ means we mount /var/lib/postgresql/data on the docker volume named whd_postgres_data. This is very important. It's safe to keep database files seperate from postgres Container.
 
 Configure WHD Through Browser:
 -----------------------------

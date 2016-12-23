@@ -77,6 +77,21 @@ Once the docker image is built or pulled from docker hub, Here is the docker run
 docker run -d -p 8081:8081 --name=whdinstance solarwinds/whd-embedded:latest 
 ```
 
+Ideally you would want the Data to be stored outside the Application container. So that when the container is upgraded or removed, the data still exists on the host. In order to create a seperate mount point for the Data directory, create a directory to store data on the host
+
+```sh
+cd /
+mkdir data
+cd /data
+mkdir whd_postgres_data
+```
+Use the following Docker run command to mount volume when launching the container instance
+
+#Docker Run with mount
+```sh
+docker run -d -p 8081:8081 --name=whdinstance -v /data/whd_postgres_data:/usr/local/webhelpdesk/bin/pgsql/var/lib/pgsql/9.2/data  solarwinds/whd-embedded:latest 
+```
+-v /data/whd_postgres_data:/usr/local/webhelpdesk/bin/pgsql/var/lib/pgsql/9.2/data means we mount /data/whd_postgres_data as a volume. This is very important. It's safe to keep database files in the host.
 
 Configure WHD Through Browser:
 -----------------------------
