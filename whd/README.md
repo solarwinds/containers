@@ -229,6 +229,12 @@ volumes:
 
  means we mount /var/lib/postgresql/data on the docker volume named whd_postgres_data. This is very important. It's safe to keep database files seperate from postgres Container.
 
+The other option is to [create volume](https://docs.docker.com/engine/reference/commandline/volume_create/) outside of docker-compose using ```docker volume create``` option and then use the volumes: by adding a external keyword on the docker-compose YAML file
+
+volumes:
+  whd_postgres_data:
+    external: true
+
 Configure WHD Through Browser:
 -----------------------------
 
