@@ -1,0 +1,17 @@
+version: "2"
+services:
+  ui:
+    image: solarwinds/container-ui:1.0
+    ports:
+     - "30080:8080"
+    environment:
+     - CLUSTER_NODES="host1,host2,host3" # TODO: specify agent nodes here
+  agent:
+    image: solarwinds/container-agent:1.0
+    privileged: true
+    networks:
+     - default 
+    volumes:
+     - /var/run/docker.sock:/host/var/run/docker.sock
+     - /proc:/host/proc:ro
+
