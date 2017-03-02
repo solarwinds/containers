@@ -1,12 +1,12 @@
 # Container Network Performance Tool
 
-## Functions*
-* Network type capacity check
-* Education and decision facilitation
-## Network type capacity comparison
-* Comparative “netdex” report
-* Performance report - as an industry standard reference
-## Visibility of container network flow size and direction
+## Functions
+1. Network type capacity check
+ 1. Education and decision facilitation
+1. Network type capacity comparison
+ 1. Comparative “netdex” report
+ 1. Performance report - as an industry standard reference
+1. Visibility of container network flow size and direction
 
 The UI container runs on one docker host in the cluster and connects to each agent via the CLUSTER_NODES environment variable
 To run the container image:
