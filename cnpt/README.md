@@ -19,9 +19,14 @@ The tool provides real-time visibility of container network flow size and direct
 Contact maintainer(s) for early access.
 
 ### Deployment Models
+
+The Agent container should be deployed on each host running docker.   Run the following command on each docker host:
+`docker run -d --name agent --privileged --net=host --restart always -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro solarwinds/container-agent:1.0`
+
 The UI container runs on one docker host in the cluster and connects to each agent via the CLUSTER_NODES environment variable
 To run the container image:
-`docker run -d --name ui -p 30080:8080 -e CLUSTER_NODES="host1,host2,host3,host4" -t solarwinds/container-ui:1.0`
+`docker run -d --name ui -p 30080:8080 -e PCAP=true -e CLUSTER_NODES="host1,host2,host3,host4" -t solarwinds/container-ui:1.0`
 
 `CLUSTER_NODES` should be a , seperated list of hosts running the agent container.
-Once the container starts up URL http://host:30080/ui/inventory will show container dependencies.
+
+Once the container starts up, connect to URL http://host:30080/ui/inventory and a list of container dependencies will be displayed
