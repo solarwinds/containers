@@ -10,6 +10,16 @@ Objective
 
 The initial objective was to create a WHD Docker image with preinstalled Web Help desk configured and ready to go with the embedded PostgreSQL. This would be offered only on RHEL Based Linux Containers since the WHD RPM is built for RHEL based Linux version. Hence, currently CentOS is being used as the base line OS image for WHD Containers. However, as the second step, PostgreSQL can be hosted on its own container and in that way, WHD can scale horizontally and need not be updated when new version of WHD is released. Also, Database containers can be backed up independent of WHD container and scaled.
 
+Running behind a proxy
+========
+While the default WHD port is 8081, you may wish to run WHD behind a network proxy in order to expose a different port to your users (e.g. 80). You'll want WHD to send user notifications (e.g. tickets) using the proxy port (e.g. 80). To manipulate which port WHD uses when sending notifications, set the URL_DEFAULT_PORT (an environment variable) to your desired port. You may set the environment variable at runtime, when deploying a new container using the -e command like so:
+```
+-e URL_DEFAULT_PORT=<port>
+```
+Full example:
+```
+docker run -d -p 8081:8081 -e URL_DEFAULT_PORT=80 --name=whdinstance solarwinds/whd-embedded:latest
+```
 Options
 ========
 Option - 1: Docker Image with Embedded PostgreSQL database
@@ -112,22 +122,22 @@ WHD Docker image with Web Help desk configured and ready to go with the PostgreS
 ```sh
 version: "2.0"
 services:
-   db:
-     container_name: postgres-whd
-     image: postgres:alpine
-   whd:
-      container_name: whdinstance
-      environment:
-         EMBEDDED: 'false'
-      build:
-         context: .
-         args:
-            EMBEDDED: 'false'
-      image: solarwinds/whd
-      ports:
-      - "8081:8081"
-      depends_on:
-      - db 
+Â Â  db:
+Â Â Â Â  container_name: postgres-whd
+Â Â Â Â  image: postgres:alpine
+Â Â  whd:
+Â Â Â Â Â  container_name: whdinstance
+Â Â Â Â Â  environment:
+Â Â Â Â Â Â Â Â  EMBEDDED: 'false'
+Â Â Â Â Â  build:
+Â Â Â Â Â Â Â Â  context: .
+Â Â Â Â Â Â Â Â  args:
+Â Â Â Â Â Â Â Â Â Â Â  EMBEDDED: 'false'
+Â Â Â Â Â  image: solarwinds/whd
+Â Â Â Â Â  ports:
+Â Â Â Â Â  - "8081:8081"
+Â Â Â Â Â  depends_on:
+Â Â Â Â Â  - db 
 ```
 
 Here is the docker build command that is used to create WHD Docker image. The tag or image name should match the namespace or username/respository name created on the docker hub account.
@@ -147,7 +157,7 @@ The command to login and push the image to docker hub repository is provided bel
 #Docker Push 
 ```sh
 docker login --username={username}
--- This will prompt you to enter the docker hub account password. On successfully logging in, you will be able to push the image to the repository 
+-- This will prompt you to enter the docker hub account password. On successfully logging in, you will be able to push the image to the repositoryÂ 
 docker push solarwinds/whd:latest 
 ```
 
@@ -163,18 +173,18 @@ docker-compose.yaml to be run on the Customer Docker Instance
 ```sh 
 version: "2.0"
 services:
-   db:
-     container_name: postgres-whd
-     image: postgres:alpine
-   whd:
-      container_name: whdinstance
-      environment:
-         EMBEDDED: 'false'
-      image: solarwinds/whd
-      ports:
-      - "8081:8081"
-      depends_on:
-      - db
+Â Â  db:
+Â Â Â Â  container_name: postgres-whd
+Â Â Â Â  image: postgres:alpine
+Â Â  whd:
+Â Â Â Â Â  container_name: whdinstance
+Â Â Â Â Â  environment:
+Â Â Â Â Â Â Â Â  EMBEDDED: 'false'
+Â Â Â Â Â  image: solarwinds/whd
+Â Â Â Â Â  ports:
+Â Â Â Â Â  - "8081:8081"
+Â Â Â Â Â  depends_on:
+Â Â Â Â Â  - db
 ```
 
 Copy the above lines and create an YAML file on the linux server containing docker instance and use the docker-compose up command.
