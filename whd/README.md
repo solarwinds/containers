@@ -11,7 +11,7 @@ Objective
 The initial objective was to create a WHD Docker image with preinstalled Web Help desk configured and ready to go with the embedded PostgreSQL. This would be offered only on RHEL Based Linux Containers since the WHD RPM is built for RHEL based Linux version. Hence, currently CentOS is being used as the base line OS image for WHD Containers. However, as the second step, PostgreSQL can be hosted on its own container and in that way, WHD can scale horizontally and need not be updated when new version of WHD is released. Also, Database containers can be backed up independent of WHD container and scaled.
 
 Running behind a proxy
-========
+---------
 While the default WHD port is 8081, you may wish to run WHD behind a network proxy in order to expose a different port to your users (e.g. 80). You'll want WHD to send user notifications (e.g. tickets) using the proxy port (e.g. 80). To manipulate which port WHD uses when sending notifications, set the URL_DEFAULT_PORT (an environment variable) to your desired port. You may set the environment variable at runtime, when deploying a new container using the -e command like so:
 ```
 -e URL_DEFAULT_PORT=<port>
