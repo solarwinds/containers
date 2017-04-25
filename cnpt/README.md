@@ -11,9 +11,9 @@ The tool provides real-time visibility of container network flow size and direct
 
 ## Functions
 1. Cluster visibility -
- 1. See container network flows (current bandwidth and direction) across Kubernetes and Docker Swarm nodes.
+  * See container network flows (current bandwidth and direction) across Kubernetes and Docker Swarm nodes.
 1. Bandwidth test -
- 1. Test throughput (performance) of each type of container network (compare network drivers).
+  * Test throughput (performance) of each type of container network (compare network drivers).
 
 ## Deployment
 Contact maintainer(s) for early access.
