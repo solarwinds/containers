@@ -12,7 +12,7 @@ The tool provides real-time visibility of container network flow size and direct
 ## Functions
 1. Cluster visibility -
   * See container network flows (current bandwidth and direction) across Kubernetes and Docker Swarm nodes.
-1. Bandwidth test -
+2. Bandwidth test -
   * Test throughput (performance) of each type of container network (compare network drivers).
 
 ## Deployment
@@ -29,4 +29,4 @@ To run the container image:
 
 `CLUSTER_NODES` should be a , seperated list of hosts running the agent container.
 
-Once the container starts up, connect to URL http://host:30080/ui/inventory and a list of container dependencies will be displayed
+Once the container starts up, connect to URL http://localhost:30080/ui/inventory and a list of container dependencies will be displayed
