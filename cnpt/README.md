@@ -5,7 +5,7 @@ The tool is intended to educate and facilitate decision-making of which type of 
 
 The tool facilitates comparison of the performance (via throughput test) of various container network plugins, producing a shareable throughput report. And assists in highlighting mishaps to avoid in your container network setup:
  1. Awareness of the convenience cost of overlays.
- 1. Mindfulness of avoiding MAC address overload in underlays.
+ 2. Mindfulness of avoiding MAC address overload in underlays.
 
 The tool provides real-time visibility of container network flow size and direction.
 
@@ -21,12 +21,17 @@ Contact maintainer(s) for early access.
 ### Deployment Models
 
 The Agent container should be deployed on each host running docker.   Run the following command on each docker host:
-`docker run -d --name agent --privileged --net=host --restart always -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro solarwinds/container-agent:1.0`
+`docker run -d --name agent --privileged --net=host --restart always -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro solarwinds/container-agent:1.1`
 
-The UI container runs on one docker host in the cluster and connects to each agent via the CLUSTER_NODES environment variable
+The UI container runs on one docker host in the cluster
 To run the container image:
-`docker run -d --name ui -p 30080:8080 -e PCAP=true -e CLUSTER_NODES="host1,host2,host3,host4" -t solarwinds/container-ui:1.0`
+`docker run -d --name ui -p 30080:80 -t solarwinds/container-ui:1.1`
 
-`CLUSTER_NODES` should be a , seperated list of hosts running the agent container.
+Once the container starts up, connect to URL http://<ip-of-ui-host>:30080/ 
 
-Once the container starts up, connect to URL http://localhost:30080/ui/inventory and a list of container dependencies will be displayed
+To connect the agents with the UI:
+
+1. Navigate to the hosts page
+2. Click the button the add button
+3. Enter in the address of each docker host on a seperated line
+4. Click add
