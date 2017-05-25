@@ -22,7 +22,8 @@ Contact maintainer(s) for early access.
 
 Deploying on CentOS 7:
 ```sudo firewall-cmd --zone=public --add-port=9090/tcp --permanent
-sudo firewall-cmd --reload```
+sudo firewall-cmd --reload
+```
 
 ### Deployment Models
 
