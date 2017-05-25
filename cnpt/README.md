@@ -17,10 +17,16 @@ The tool provides real-time visibility of container network flow size and direct
 
 ## Deployment
 Contact maintainer(s) for early access.
+### Required Ports
+* 9090/tcp - used to provide communication between agent and UI.
+
+Deploying on CentOS 7:
+```sudo firewall-cmd --zone=public --add-port=9090/tcp --permanent
+sudo firewall-cmd --reload```
 
 ### Deployment Models
 
-The Agent container should be deployed on each host running docker.   Run the following command on each docker host:
+The Agent container should be deployed on each host running docker. Run the following command on each docker host:
 
 `docker run -d --name agent --privileged --net=host --restart always -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro solarwinds/container-agent:1.1`
 
