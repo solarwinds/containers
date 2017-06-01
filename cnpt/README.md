@@ -21,7 +21,8 @@ Contact maintainer(s) for early access.
 * 9090/tcp - used to provide communication between agent and UI.
 
 Deploying on CentOS 7:
-```sudo firewall-cmd --zone=public --add-port=9090/tcp --permanent
+```
+sudo firewall-cmd --zone=public --add-port=9090/tcp --permanent
 sudo firewall-cmd --reload
 ```
 
