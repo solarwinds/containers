@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    name: swi-ui
+  name: swi-ui
+spec:
+  replicas: 1
+  selector:
+    app: swi-ui
+  template:
+    metadata:
+      labels:
+        app: swi-ui
+    spec:
+      containers:
+      - name: swi-ui
+        image: solarwinds/container-ui:latest
+        env:
+        - name: PCAP
+          value: "TRUE"
+        ports:
+        - containerPort: 80
+          name: http
