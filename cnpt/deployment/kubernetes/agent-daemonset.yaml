@@ -1,0 +1,31 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: agent
+spec:
+  template:
+    metadata:
+      labels:
+        app: agent
+    spec:
+      hostNetwork: true
+      containers:
+      - image: solarwinds/container-agent:latest
+        imagePullPolicy: Always
+        name: agent
+        volumeMounts:
+        - name: docker
+          mountPath: /host/var/run/docker.sock
+          readOnly: false
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        securityContext:
+          privileged: true
+      volumes:
+      - name: docker
+        hostPath:
+          path: /var/run/docker.sock
+      - name: proc
+        hostPath:
+          path: /proc
