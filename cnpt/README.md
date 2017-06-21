@@ -32,7 +32,7 @@ The UI container runs on one docker host in the cluster.  To run the container i
 docker run -d --name swi-ui -p 80:80 -t solarwinds/container-ui
 ```
 #### With a container orchestrator
-See the deployment yaml files in the [deployment]|(deployment) folder.
+See the deployment yaml files in the [deployment](deployment) folder.
 
 ### Required Ports
 Be sure to allow TCP traffic on port 9090 between your hosts. 
