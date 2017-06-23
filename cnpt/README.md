@@ -19,7 +19,7 @@ The tool provides real-time visibility of container network flow size and direct
 This two deploys as two types of containers - one that acts as an agent (per host) and as a user interface.
 
 ### Deployment Models
-
+#### Without a container orchestrator
 The Agent container should be deployed on each host running docker. Run the following command on each docker host:
 
 ```
@@ -31,8 +31,21 @@ The UI container runs on one docker host in the cluster.  To run the container i
 ```
 docker run -d --name swi-ui -p 80:80 -t solarwinds/container-ui
 ```
+#### With a container orchestrator
+See the deployment yaml files in the [deployment](deployment) folder.
 
-Once the container starts up, connect to URL http://ip-of-ui-host:30080/ 
+### Required Ports
+Be sure to allow TCP traffic on port 9090 between your hosts. 
+* 9090/tcp - used to provide communication between agent and UI.
+
+Deploying on CentOS 7:
+```
+sudo firewall-cmd --zone=public --add-port=9090/tcp --permanent
+sudo firewall-cmd --reload
+```
+
+## Using the tool
+Once the UI starts up, connect to URL http://ip-of-ui-host 
 
 To connect the agents with the UI:
 
@@ -41,11 +54,3 @@ To connect the agents with the UI:
 3. In the dialog, enter in the address of each docker host on a seperate line
 4. Click add
 
-### Required Ports
-* 9090/tcp - used to provide communication between agent and UI.
-
-Deploying on CentOS 7:
-```
-sudo firewall-cmd --zone=public --add-port=9090/tcp --permanent
-sudo firewall-cmd --reload
-```
