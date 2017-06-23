@@ -55,3 +55,5 @@ To connect the agents with the UI:
 3. In the dialog, enter in the address of each docker host on a seperate line
 4. Click add
 
+# Questions/Comments?
+Please [open an issue](https://github.com/solarwinds/containers/issues/new), we'd love to hear from you.
