@@ -14,8 +14,7 @@ The tool provides real-time visibility of container network flow size and direct
 1. _Cluster visibility_ - See container network flows (current bandwidth and direction) across Kubernetes and Docker Swarm nodes.
 2. _Bandwidth test_ - Test throughput (performance) of each type of container network (compare network drivers).
 3. _Flow observations_ - Receive insight on application consumption of network paths between containers.
-<img src="https://github.com/solarwinds/containers/blob/master/cnpt/container-topology.png" width="250" /> <img src="https://github.com/solarwinds/containers/blob/master/cnpt/container-topology-2.png" width="250" /> 
-<img src="./network-performance-test.png" width="250" />
+
 ## Deployment
 This tool deploys as two types of containers - one that acts as an agent (per host) and as a user interface.
 
@@ -70,5 +69,13 @@ To connect the agents with the UI:
 3. In the dialog, enter in the address of each docker host on a seperate line
 4. Click add
 
+### Viewing container topology and flows
+<img src="https://github.com/solarwinds/containers/blob/master/cnpt/container-topology.png" width="250" /> <img src="https://github.com/solarwinds/containers/blob/master/cnpt/container-topology-2.png" width="250" /> 
+### Running a network performance test
+<img src="./network-performance-test.png" width="450" />
+Test throughput (performance) of each type of container network (compare network drivers).
+
+### Interpretting observations
+This tool measures the size of flow and latency between containers. It calculates optimal adjacencies of communicating containers based on these two figures as well as accounts for latency between hosts themselves. Observations aim to minimize the amount of latency each byte of traffic has on the network by moving containers with higher communication loads closer to each other.
 # Questions/Comments?
 Please [open an issue](https://github.com/solarwinds/containers/issues/new), we'd love to hear from you.
