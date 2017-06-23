@@ -14,7 +14,7 @@ The tool provides real-time visibility of container network flow size and direct
 1. _Cluster visibility_ - See container network flows (current bandwidth and direction) across Kubernetes and Docker Swarm nodes.
 2. _Bandwidth test_ - Test throughput (performance) of each type of container network (compare network drivers).
 3. _Flow observations_ - Receive insight on application consumption of network paths between containers.
-![container topology](container topology.png)
+![container topology](https://github.com/solarwinds/containers/blob/master/cnpt/container%20topology.png)
 ## Deployment
 This two deploys as two types of containers - one that acts as an agent (per host) and as a user interface.
 
