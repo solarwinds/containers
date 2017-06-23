@@ -1,5 +1,5 @@
 # Container Network Performance Tool
-
+A container monitoring tool that works across Kubernetes and Docker Swarm.
 ## Purpose
 The tool is intended to educate and facilitate decision-making of which type of network (i.e. network driver) to deploy in a container cluster (a multi-host environment), whether container orchestration is present or not. 
 
@@ -33,7 +33,24 @@ The UI container runs on one docker host in the cluster.  To run the container i
 docker run -d --name swi-ui -p 80:80 -t solarwinds/container-ui
 ```
 #### With a container orchestrator
-See the deployment yaml files in the [deployment](deployment) folder.
+##### Swarm
+*Option 1: Compose* - copy the compose deployment yaml from the [deployment](deployment) folder and execute:
+ 
+```
+ docker stack deploy --compose-file docker-compose.yml
+ ```
+*Option 2: Service* - create a cluster service
+```
+docker service create --name swi-ui --replicas 1 --publish 30080:80 solarwinds/container-ui
+```
+
+##### Kubernetes
+Copy the spec files from the [deployment](deployment) folder and execute:
+```
+kubectl apply -f ui-rc.yaml
+kubectl apply -f ui-service.yaml
+kubectl apply -f agent.yaml
+```
 
 ### Required Ports
 Be sure to allow TCP traffic on port 9090 between your hosts. 
