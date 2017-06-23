@@ -14,13 +14,12 @@ The tool provides real-time visibility of container network flow size and direct
 1. _Cluster visibility_ - See container network flows (current bandwidth and direction) across Kubernetes and Docker Swarm nodes.
 2. _Bandwidth test_ - Test throughput (performance) of each type of container network (compare network drivers).
 3. _Flow observations_ - Receive insight on application consumption of network paths between containers.
-<img src="https://github.com/solarwinds/containers/blob/master/cnpt/container-topology.png" width="250" /> <img src="https://github.com/solarwinds/containers/blob/master/cnpt/container-topology-2.png" width="250" />
-
+<img src="https://github.com/solarwinds/containers/blob/master/cnpt/container-topology.png" width="250" /> <img src="https://github.com/solarwinds/containers/blob/master/cnpt/container-topology-2.png" width="250" /> 
+<img src="./network-performance-test.png" width="250" />
 ## Deployment
-This two deploys as two types of containers - one that acts as an agent (per host) and as a user interface.
+This tool deploys as two types of containers - one that acts as an agent (per host) and as a user interface.
 
-### Deployment Models
-#### Without a container orchestrator
+### Deployment without a container orchestrator
 The Agent container should be deployed on each host running docker. Run the following command on each docker host:
 
 ```
@@ -32,8 +31,7 @@ The UI container runs on one docker host in the cluster.  To run the container i
 ```
 docker run -d --name swi-ui -p 80:80 -t solarwinds/container-ui
 ```
-#### With a container orchestrator
-##### Swarm
+### Deployment with Docker Swarm
 *Option 1: Compose* - copy the compose deployment yaml from the [deployment](deployment) folder and execute:
  
 ```
@@ -44,7 +42,7 @@ docker run -d --name swi-ui -p 80:80 -t solarwinds/container-ui
 docker service create --name swi-ui --replicas 1 --publish 30080:80 solarwinds/container-ui
 ```
 
-##### Kubernetes
+### Deployment with Kubernetes
 Copy the spec files from the [deployment](deployment) folder and execute:
 ```
 kubectl apply -f ui-rc.yaml
