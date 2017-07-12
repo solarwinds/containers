@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Jock! Start the engine!
 /app/dpa_${VERSION_}/startup.sh
@@ -7,4 +7,4 @@
 touch /app/dpa_${VERSION_}/iwc/tomcat/logs/catalina.out
 
 # Print the contents of the Tomcat catalina.out log on stdout.
-exec tail -f  /app/dpa_${VERSION_}/iwc/tomcat/logs/catalina.out
+exec /usr/bin/tail -n 1000 --follow=name /app/dpa_${VERSION_}/iwc/tomcat/logs/catalina.out
