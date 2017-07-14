@@ -46,7 +46,7 @@ Copy the spec files from the [deployment](deployment) folder and execute:
 ```
 kubectl apply -f ui-rc.yaml
 kubectl apply -f ui-service.yaml
-kubectl apply -f agent.yaml
+kubectl apply -f agent-daemonset.yaml
 ```
 
 ### Required Ports
