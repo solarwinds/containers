@@ -1,3 +1,4 @@
+![CNPT Logo](https://raw.githubusercontent.com/solarwinds/containers/master/cnpt/cnpt%20logo.png) 
 # Container Network Performance Tool
 A container monitoring tool that works across Kubernetes and Docker Swarm.
 ## Purpose
