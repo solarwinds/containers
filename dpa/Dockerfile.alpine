@@ -1,0 +1,26 @@
+# WORK IN PROGRESS:
+#    This does not work with openjdk8 due to missing X11 font-util libraries.
+#    It can allegedly be resolved by running Suns jdk8 - ain't nobody got time for that.
+#
+#    Why it actually requires GUI libs to run a server app is beyond my understanding.
+
+FROM alpine:latest
+
+LABEL ProductDownloadName="SolarWinds-DPA-10.2.579-64bit-Eval.tar.gz" Version="10.2.579" ProductName="DPA"
+
+ENV VERSION=10.2.579 VERSION_=10_2_579 GZIP_FILE=dpa.tar.gz
+
+RUN apk add --no-cache openjdk8-jre wget supervisor font-util \
+ && wget --progress=dot:mega http://downloads.solarwinds.com/solarwinds/Release/DatabasePeformanceAnalyzer-DPA/${VERSION}SR1/SolarWinds-DPA-${VERSION}-64bit-Eval.tar.gz -O /$GZIP_FILE \
+ && mkdir /app /app-tmp \
+ && cd /app-tmp \
+ && tar zxvf /$GZIP_FILE \
+ && /app-tmp/dpa_${VERSION_}_x64_installer/dpa_${VERSION_}_x64_installer.sh \
+             --target /app-tmp -- --silent-install --install-dir /app \
+ && cd /app && rm -rf /app-tmp
+
+EXPOSE 8123 8124
+
+ADD start.sh /start.sh
+
+ENTRYPOINT ["/start.sh"]
