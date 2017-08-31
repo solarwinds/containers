@@ -24,6 +24,12 @@ ADD supervisord.conf /home/docker/whd/supervisord.conf
 ADD whd $WHD_HOME/whd
 ADD whd_bin $WHD_HOME/bin/whd
 RUN chmod 744 /run.sh && chmod 644 $WHD_HOME/*.properties && chmod 755 $WHD_HOME/whd && chmod 744 $WHD_HOME/*.sh && chmod 755 $WHD_HOME/bin/whd 
+RUN yum -y install crontabs
+RUN sed -i -e '/pam_loginuid.so/s/^/#/' /etc/pam.d/crond
+ADD cron /etc/cron.d/cron_test
+RUN chmod 744 /etc/cron.d/cron_test
+RUN crontab /etc/cron.d/cron_test
+
 EXPOSE 8081
 
 ENTRYPOINT ["/run.sh"]
