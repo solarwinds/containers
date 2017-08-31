@@ -1,0 +1,7 @@
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+* * * * * echo "hello" >> /usr/local/webhelpdesk/hello.txt
+0 3 * * * root find /usr/local/webhelpdesk/bin/tomcat/logs -mtime +1 -exec rm {} \;
+0 3 * * * root find /usr/local/webhelpdesk/log/ -mtime +5 -exec rm {} \;
+#empty line
