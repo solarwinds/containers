@@ -79,4 +79,4 @@ Test throughput (performance) of each type of container network (compare network
 ### Interpreting observations
 This tool measures the size of flow and latency between containers. It calculates optimal adjacencies of communicating containers based on these two figures as well as accounts for latency between hosts themselves. Observations aim to minimize the amount of latency each byte of traffic has on the network by moving containers with higher communication loads closer to each other.
 # Questions/Comments?
-Please [open an issue](https://github.com/solarwinds/containers/issues/new), we'd love to hear from you.
+Please [open an issue](https://github.com/solarwinds/containers/issues/new), we'd love to hear from you. As a SolarWinds Innovation Project, this project is supported in a best-effort fashion.
