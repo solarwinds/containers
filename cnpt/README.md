@@ -1,6 +1,6 @@
 ![CNPT Logo](https://raw.githubusercontent.com/solarwinds/containers/master/cnpt/cnpt%20logo.png) 
 # Container Network Performance Tool
-A container monitoring tool that works across Kubernetes and Docker Swarm.
+A container monitoring tool that works on individual Docker hosts or clusters running Kubernetes or Docker Swarm.
 ## Purpose
 The tool is intended to educate and facilitate decision-making of which type of network (i.e. network driver) to deploy in a container cluster (a multi-host environment), whether container orchestration is present or not. 
 
