@@ -71,12 +71,13 @@ To connect the agents with the UI:
 4. Click add
 
 ### Viewing container topology and flows
-<img src="https://github.com/solarwinds/containers/blob/master/cnpt/container-topology.png" width="250" /> <img src="./container-topology-2.png" width="250" /> 
+<img src="https://github.com/solarwinds/containers/blob/master/cnpt/cmon-topology.png" width="750" /> <img src="./cmon-topology.png" width="250" /> 
 ### Running a network performance test
-<img src="https://github.com/solarwinds/containers/blob/master/cnpt/network-performance-test.png" width="550" />
+<img src="https://github.com/solarwinds/containers/blob/master/cnpt/network-performance-test.png" width="750" />
 Test throughput (performance) of each type of container network (compare network drivers).
 
 ### Interpreting observations
 This tool measures the size of flow and latency between containers. It calculates optimal adjacencies of communicating containers based on these two figures as well as accounts for latency between hosts themselves. Observations aim to minimize the amount of latency each byte of traffic has on the network by moving containers with higher communication loads closer to each other.
+
 # Questions/Comments?
 Please [open an issue](https://github.com/solarwinds/containers/issues/new), we'd love to hear from you. As a SolarWinds Innovation Project, this project is supported in a best-effort fashion.
