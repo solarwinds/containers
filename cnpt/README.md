@@ -71,9 +71,10 @@ To connect the agents with the UI:
 4. Click add
 
 ### Viewing container topology and flows
-<img src="https://github.com/solarwinds/containers/blob/master/cnpt/cmon-topology.png" width="750" /> <img src="./cmon-topology.png" width="250" /> 
+<img src="https://github.com/solarwinds/containers/blob/master/cnpt/cmon-topology.png" width="800" />
+
 ### Running a network performance test
-<img src="https://github.com/solarwinds/containers/blob/master/cnpt/network-performance-test.png" width="750" />
+<img src="https://github.com/solarwinds/containers/blob/master/cnpt/network-performance-test.png" width="800" />
 Test throughput (performance) of each type of container network (compare network drivers).
 
 ### Interpreting observations
