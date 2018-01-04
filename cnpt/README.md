@@ -1,4 +1,4 @@
-![CNPT Logo](https://raw.githubusercontent.com/solarwinds/containers/master/cnpt/cnpt%20logo.png) 
+![CNPT Logo](docs/cnpt%20logo.png) 
 # Container Network Performance Tool
 A container monitoring tool that works on individual Docker hosts or clusters running Kubernetes or Docker Swarm.
 ## Purpose
@@ -71,10 +71,10 @@ To connect the agents with the UI:
 4. Click add
 
 ### Viewing container topology and flows
-<img src="https://github.com/solarwinds/containers/blob/master/cnpt/cmon-topology.png" width="800" />
+<img src="docs/cmon-topology.png" width="800" />
 
 ### Running a network performance test
-<img src="https://github.com/solarwinds/containers/blob/master/cnpt/network-performance-test.png" width="800" />
+<img src="docs/network-performance-test.png" width="800" />
 Test throughput (performance) of each type of container network (compare network drivers).
 
 ### Interpreting observations
