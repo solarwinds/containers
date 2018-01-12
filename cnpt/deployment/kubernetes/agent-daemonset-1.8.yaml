@@ -1,0 +1,35 @@
+kind: DaemonSet
+apiVersion: apps/v1beta2
+metadata:
+  namespace: cnpt
+  labels:
+    app: agent
+spec:
+  selector:
+    matchLabels:
+      app: agent
+  template:
+    metadata:
+      labels:
+        app: agent
+    spec:
+      volumes:
+        - name: docker
+          hostPath:
+            path: /var/run/docker.sock
+        - name: proc
+          hostPath:
+            path: /proc
+      containers:
+        - name: agent
+          image: 'solarwinds/container-agent:latest'
+          volumeMounts:
+            - name: docker
+              mountPath: /host/var/run/docker.sock
+            - name: proc
+              readOnly: true
+              mountPath: /host/proc
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+      restartPolicy: Always
