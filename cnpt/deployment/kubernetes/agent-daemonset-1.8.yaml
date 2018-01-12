@@ -1,7 +1,6 @@
 kind: DaemonSet
 apiVersion: apps/v1beta2
 metadata:
-  namespace: cnpt
   labels:
     app: agent
 spec:
