@@ -50,6 +50,7 @@ kubectl apply -f ui-rc.yaml
 kubectl apply -f ui-service.yaml
 kubectl apply -f agent-daemonset.yaml
 ```
+If running Kubernetes 1.8 or greater, use the `agent-daemonset-1.8.yaml`, which uses the apps API, not extensions API.
 
 ### Required Ports
 Be sure to allow TCP traffic on port 9090 between your hosts. 
