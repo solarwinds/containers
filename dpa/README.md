@@ -11,7 +11,7 @@ The primary purpose of the document is to explain the steps involved in deployin
 
 FROM centos:latest
 
-MAINTAINER Solarwinds  "vijay.veeraraghavan@solarwinds.com"
+MAINTAINER Solarwinds  "innovate@solarwinds.com"
 
 LABEL ProductDownloadName="SolarWinds-DPA-X.Y.Z.B-64bit-Eval.tar.gz" Version="X.Y.Z.B" ProductName="DPA"
 
