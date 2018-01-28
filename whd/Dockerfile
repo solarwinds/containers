@@ -2,7 +2,7 @@
 
 FROM centos:latest
 
-MAINTAINER Solarwinds  "vijay.veeraraghavan@solarwinds.com"
+MAINTAINER Solarwinds "innovate@solarwinds.com"
 
 ARG EMBEDDED
 
