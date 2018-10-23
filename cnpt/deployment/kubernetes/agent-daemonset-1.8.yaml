@@ -1,6 +1,7 @@
-kind: DaemonSet
 apiVersion: apps/v1beta2
+kind: DaemonSet
 metadata:
+  name: cnpt-agent
   labels:
     app: agent
 spec:
