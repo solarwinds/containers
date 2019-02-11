@@ -219,36 +219,3 @@ trap "whd::cleanup; exit 1" SIGHUP SIGINT SIGQUIT SIGPIPE SIGTERM
 
 main "$@"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
