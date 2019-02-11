@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-declare -r WHD_DEFAULT_CONFIG='65f2437f7fcd3a233beeea1a1f209f7d'
+declare -r WHD_DEFAULT_CONFIG='65f2437f7fcd3a233beeea1a1f209f7d  -'
 declare -r WHD_API='http://localhost:8081/helpdesk'
 declare -r WHD_API_DBTEST='WebObjects/Helpdesk.woa/ra/configuration/database/test.json'
 declare -r WHD_API_CONFIG='WebObjects/Helpdesk.woa/ra/configuration.json?uniqueId='
@@ -26,6 +26,7 @@ declare -r WHD_ALREADY_UP='Initialization actions are not permitted once the app
 
 declare -r WHD_SCRIPTS='/usr/local/webhelpdesk/scripts'
 declare -r WHD_BIN='/usr/local/webhelpdesk/whd'
+declare -r WHD_ARTIFACT="${WHD_SCRIPTS}/.setup-complete"
 
 declare -r CLEAR='\033[0m'
 declare -r RED='\033[0;31m'
@@ -67,7 +68,7 @@ function whd::cleanup() {
 }
 
 function whd::warn_default_config() {
-  CONFIG_HASH=$(md5sum -q "${WHD_SCRIPTS}/config.json")
+  CONFIG_HASH=$(md5sum "${WHD_SCRIPTS}/config.json")
 
   if [ "${CONFIG_HASH}" = "${WHD_DEFAULT_CONFIG}" ]; then
     whd::cstatus "Caution! Default configuration used! Please the default values as soon as the application in running!"
@@ -84,9 +85,7 @@ function whd::probe_db() {
     PROBE_DONE=$(echo "${PROBE_RES}" | jq '.connectionEstablished')
     
     if [[ "${PROBE_ERR}" == *"${WHD_ALREADY_UP}"* ]]; then
-      whd::cstatus "This instance is already configured. Starting..."
-      supervisord --nodaemon -c "${WHD_SCRIPTS}/supervisord.conf"
-      exit 0
+      whd::alread_setup
     fi
 
     if [[ ! "${PROBE_ERR}" = "null" ]]; then
@@ -169,6 +168,8 @@ function whd::success_message() {
   FIN_USER=$(echo "${CONFIG_CONTENT}" | jq -r '.admin.userName')
   FIN_MAIL=$(echo "${CONFIG_CONTENT}" | jq -r '.admin.email')
 
+  touch "${WHD_ARTIFACT}"
+
   whd::cstatus "After a few seconds, you'll be able to login to your new WHD instance:\nURL:      ${FIN_URL}\nUser:     ${FIN_USER} (${FIN_MAIL})\nPassword: see config"
 }
 
@@ -178,9 +179,30 @@ function whd::start_whd() {
   fi
 }
 
+function whd::stop() {
+  if ! "${WHD_BIN}" stop ; then
+    whd::error "Could stop test WHD instance."
+  fi
+}
+
+function whd::daemonize() {
+  supervisord --nodaemon -c "${WHD_SCRIPTS}/supervisord.conf"
+}
+
+function whd::alread_setup() {
+  whd::cstatus "This instance is already configured. Starting..."
+  whd::daemonize
+  exit 0
+}
+
 function main() {
   whd::check_dependencies jq curl md5sum
   whd::warn_default_config
+
+  if [ -f "${WHD_ARTIFACT}" ]; then
+    whd::alread_setup
+  fi
+
   whd::start_whd
   whd::probe_db
   whd::init_db
@@ -188,7 +210,8 @@ function main() {
   whd::success_message
   
   whd::cleanup
-  supervisord --nodaemon -c "${WHD_SCRIPTS}/supervisord.conf"
+  whd::stop
+  whd::daemonize
   exit 0
 }
 
