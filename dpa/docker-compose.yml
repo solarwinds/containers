@@ -1,5 +1,3 @@
-#!/bin/sh
-
 # Copyright 2016 SolarWinds Worldwide, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,11 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Jock! Start the engine!
-/app/"${PREFIX}"/startup.sh
+version: "3.6"
 
-# Touch to update inode, just in case tomcat hasn't written to it yet.
-touch /app/"${PREFIX}"/iwc/tomcat/logs/catalina.out
+networks:
+  dpanet:
+    attachable: true
 
-# Print the contents of the Tomcat catalina.out log on stdout.
-exec /usr/bin/tail -n 1000 --follow=name /app/"${PREFIX}"/iwc/tomcat/logs/catalina.out
+services:
+  dpa:
+    build: .
+    ports:
+      - "8123:8123"
+      - "8124:8124"
+    networks:
+      - dpanet
+    depends_on:
+      - perfdb
+
+  perfdb:
+    image: mysql:5.7.9
+    environment:
+      MYSQL_ROOT_PASSWORD: changethis
+    networks:
+      - dpanet
