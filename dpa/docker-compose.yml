@@ -1,0 +1,23 @@
+version: "3.6"
+
+networks:
+  dpanet:
+    attachable: true
+
+services:
+  dpa:
+    build: .
+    ports:
+      - "8123:8123"
+      - "8124:8124"
+    networks:
+      - dpanet
+    depends_on:
+      - perfdb
+
+  perfdb:
+    image: mysql:5.7.9
+    environment:
+      MYSQL_ROOT_PASSWORD: changethis
+    networks:
+      - dpanet
