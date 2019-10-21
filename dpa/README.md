@@ -30,7 +30,7 @@ EXPOSE 8123 8124
 
 ENTRYPOINT ["/run.sh"]
 ```
-Here is the docker build command that is used to create DPA Docker image. The tag or image name should match the namespace or username/respository name created on the docker hub account.
+Here is the docker build command that is used to create DPA Docker image. The tag or image name should match the namespace or username/repository name created on the docker hub account.
 
 ## Docker Build 
 ```sh
