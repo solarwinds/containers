@@ -58,11 +58,11 @@ docker push solarwinds/dpa:latest
 docker pull solarwinds/dpa[:latest]
 ```
  
-Once the docker image is built or pulled from docker hub, Here is the docker run command to start the container. This will create DPA container and start the PostgreSQL and start Web Help desk web application on 8081 port. This will run the container in the daemon mode.
+Once the docker image is built or pulled from docker hub, Here is the docker run command to start the container. This will create DPA container and start the process. This will run the container in the daemon mode.
 
 #Docker Run 
 ```sh
-docker run -i -t -p 8123:8123  -p 8124:8124 --name=dpainstance solarwinds/dpa:latest
+docker run -d -p 8123:8123  -p 8124:8124 --name=dpainstance solarwinds/dpa:latest
 ```
 
 

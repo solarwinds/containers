@@ -1,10 +1,9 @@
-FROM centos:latest
+FROM centos:centos8
 
-LABEL ProductDownloadName="SolarWinds-DPA-10.2.579-64bit-Eval.tar.gz" Version="10.2.579" ProductName="DPA"
+LABEL ProductDownloadName="SolarWinds-DPA-2019.4.1058-64bit-Eval.tar.gz" Version="2019.4.1058" ProductName="DPA"
 
-ENV VERSION=12.0.3074 VERSION_=12_0_3074 GZIP_FILE=dpa.tar.gz
-
-RUN yum clean all && yum install -y python-setuptools jre wget && easy_install supervisor \
+ENV VERSION=2019.4.1058 VERSION_=2019_4_1058 GZIP_FILE=dpa.tar.gz
+RUN yum clean all && yum install -y jre wget \
  && wget --progress=dot:mega http://downloads.solarwinds.com/solarwinds/Release/DatabasePeformanceAnalyzer-DPA/${VERSION}/SolarWinds-DPA-${VERSION}-64bit-Eval.tar.gz -O /$GZIP_FILE \
  && mkdir /app /app-tmp \
  && cd /app-tmp \
