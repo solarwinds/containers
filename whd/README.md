@@ -31,11 +31,11 @@ Option - 1: Docker Image with Embedded PostgreSQL database
 
 FROM centos:latest
 
-MAINTAINER Solarwinds  "vijay.veeraraghavan@solarwinds.com"
+MAINTAINER Solarwinds "innovate@solarwinds.com"
 
 ARG EMBEDDED
 
-ENV CONSOLETYPE=serial PRODUCT_VERSION=12.5.0 PRODUCT_NAME=webhelpdesk-12.5.0.1257-1.x86_64.rpm.gz GZIP_FILE=webhelpdesk.rpm.gz RPM_FILE=webhelpdesk.rpm EMBEDDED=${EMBEDDED:-true} WHD_HOME=/usr/local/webhelpdesk
+ENV CONSOLETYPE=serial PRODUCT_VERSION=12.7.1 PRODUCT_NAME=webhelpdesk-12.7.1.538-1.x86_64.rpm.gz GZIP_FILE=webhelpdesk.rpm.gz RPM_FILE=webhelpdesk.rpm EMBEDDED=${EMBEDDED:-true} WHD_HOME=/usr/local/webhelpdesk
 
 RUN echo Environment :: $EMBEDDED
 

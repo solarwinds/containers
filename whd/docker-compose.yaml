@@ -1,18 +1,23 @@
 version: "2.0"
 services:
-   db:
-     container_name: postgres-whd
-     image: postgres:alpine
-   whd:
-      container_name: whdinstance
-      environment:
-         EMBEDDED: 'false'
-      build:
-         context: .
-         args:
-            EMBEDDED: 'false'
-      image: vijayveera/whd
-      ports:
-      - "8081:8081"
-      depends_on:
-      - db
+  db:
+    container_name: postgres-whd
+    image: postgres:alpine
+    environment: 
+      POSTGRES_PASSWORD: "postgres"
+    ports:
+    - "5452:5432"
+  whd:
+    container_name: whdinstance
+    environment:
+      EMBEDDED: 'false'
+      PGPASSWORD: "postgres"
+    build:
+      context: .
+      args:
+        EMBEDDED: 'false'
+    image: solarwinds/whd
+    ports:
+    - "8081:8081"
+    depends_on:
+    - db

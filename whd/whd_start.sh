@@ -40,7 +40,7 @@ echo Attempt : $i
 # Test WHD
   sleep 10
 WHD_RESPONSE=`ps -ef | grep -ic tomcat`
-if [ $WHD_RESPONSE -gt 0 ];
+if [ $WHD_RESPONSE -gt 1 ];
 then
   echo WHD was running on first test
   break;

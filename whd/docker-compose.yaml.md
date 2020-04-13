@@ -112,18 +112,18 @@ docker-compose up [-d]
 ```sh
 version: "2.0"
 services:
-   db:
-     container_name: postgres-whd
-     image: postgres:alpine
-   whd:
-      container_name: whdinstance
-      environment:
-         EMBEDDED: 'false'
-      image: solarwinds/whd
-      ports:
-      - "8081:8081"
-      depends_on:
-      - db
+ï¿½ï¿½ db:
+ï¿½ï¿½ï¿½ï¿½ container_name: postgres-whd
+ï¿½ï¿½ï¿½ï¿½ image: postgres:alpine
+ï¿½ï¿½ whd:
+ï¿½ï¿½ï¿½ï¿½ï¿½ container_name: whdinstance
+ï¿½ï¿½ï¿½ï¿½ï¿½ environment:
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ EMBEDDED: 'false'
+ï¿½ï¿½ï¿½ï¿½ï¿½ image: solarwinds/whd
+ï¿½ï¿½ï¿½ï¿½ï¿½ ports:
+ï¿½ï¿½ï¿½ï¿½ï¿½ - "8081:8081"
+ï¿½ï¿½ï¿½ï¿½ï¿½ depends_on:
+ï¿½ï¿½ï¿½ï¿½ï¿½ - db
 ```
 
 Copy the above lines and create an YAML file on the linux server containing docker instance and use the docker-compose up command.

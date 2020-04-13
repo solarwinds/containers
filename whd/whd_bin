@@ -5,6 +5,10 @@
 #
 # Web Help Desk control script
 #
+OS=`uname -s`
+if [ "${OS}" = "Darwin" ]; then
+chmod -R o+x $WHD_HOME/bin/jre/bin
+fi
 
 GREP="grep"
 if [ "`uname`" == "SunOS" ]; then
@@ -37,7 +41,7 @@ function show_usage {
 	echo
 	echo "   Use -u to force the Web Help Desk to start under the current user"
 	echo "   rather than switch to root. Requires write access to the following:"
-	echo 
+	echo
 	echo "      $WHD_HOME/bin/tomcat/conf/"
 	echo "      $WHD_HOME/log/"
 	echo
@@ -67,6 +71,39 @@ function update_jce_policy_files {
 	fi
 }
 
+function check_port {
+
+if [ "$PORT_TO_CHECK" ]; then
+	echo "Checking if port $PORT_TO_CHECK is available"
+	CHECK_CMD_RESULT=`ss -anp sport = :$PORT_TO_CHECK | awk 'NR<2 {next} {print $NF}'`
+	if [ "$CHECK_CMD_RESULT" ]; then
+		STARTUP_MESSAGE="Port $PORT_TO_CHECK is already in use by $CHECK_CMD_RESULT."
+	else
+		STARTUP_MESSAGE="Port $PORT_TO_CHECK is available."
+	fi
+	show_and_log_message
+fi
+}
+
+function create_certificate {
+
+	$JAVA_HOME/bin/keytool -genkey -keystore $KEYSTORE_FILE -alias tomcat -keyalg RSA -dname "CN=$DOMAIN_NAME, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown" -keypass $KEYSTORE_PASS -storepass $KEYSTORE_PASS -validity 712 >> $WHD_HOME/log/startup.log
+	ERROR_CODE=$?
+	if [ ! $ERROR_CODE -eq 0 ]; then
+		STARTUP_MESSAGE="ERROR: Could not create keystore."
+		show_and_log_message
+		exit 1
+	fi
+
+}
+
+function show_and_log_message {
+echo $STARTUP_MESSAGE
+echo "$(date "+%F %T"): $STARTUP_MESSAGE">>$WHD_HOME/log/startup.log
+}
+
+
+
 USE_SUDO=1
 if [ "$1" == "-u" ]; then
 	USE_SUDO=0
@@ -86,15 +123,15 @@ while [ -h "$PRG" ] ; do
 		PRG=`dirname "$PRG"`/"$link"
 	fi
 done
- 
-# get the full path to the WebHelpDesk home 
+
+# get the full path to the WebHelpDesk home
 if echo $PRG|grep "^/" >/dev/null 2>&1
 then
 	FULLPATH=$PRG
 else
 	THIS_CMD=$PRG
 	if echo $THIS_CMD|grep "^\./" >/dev/null 2>&1
-	then 
+	then
 		THIS_CMD=`basename $PRG`
 	fi
 	FULLPATH="`pwd`/$THIS_CMD"
@@ -199,7 +236,7 @@ fi
 # call to start Tomcat
 #
 # IMPORTANT: If the list contains spaces, it must be enclosed
-# in quotes in whd.conf; otherwise, the variable will be set 
+# in quotes in whd.conf; otherwise, the variable will be set
 # with the empty string when it is sourced above.
 PRIVILEGED_NETWORKS=`echo "$PRIVILEGED_NETWORKS" | sed -e "s/ //g"`
 
@@ -213,13 +250,13 @@ export JAVA_OPTS="-Djava.awt.headless=true \
 	-Dlogback.configurationFile=\"$WHD_HOME/conf/logback-config.xml\" \
 	-DWHDWebObjectsMonitorDeployment=false \
 	-Dwebobjects.user.dir=\"${WHD_HOME}/bin/webapps/helpdesk\" \
+	-Dfile.encoding="utf-8" \
 	${JAVA_OPTS}"
 
 export CATALINA_HOME="$WHD_HOME/bin/tomcat"
 export CATALINA_PID="$WHD_HOME/log/.whd.pid"
 export CLASSPATH="$WHD_HOME/bin/webapps/helpdesk/WEB-INF/lib/MDSUnicode.jar"
 export CATALINA_LOG="$WHD_HOME/log/catalina.out"
-export JAVA_ENDORSED_DIRS="$WHD_HOME/conf/endorsed"
 
 if [ "$WHD_ARGS" = "debug" ]; then
 	CATALINA_ARGS="run"
@@ -234,11 +271,11 @@ fi
 if [ "$WHD_ARGS" = "start" ]; then
 	if [ "$2" ]; then
 		case $2 in
-		*[!0-9]) 
+		*[!0-9])
            echo "Invalid port number."
            echo
            exit ;;
-		*) 
+		*)
 			WHD_PORT=$2
 		esac
 	else
@@ -246,7 +283,7 @@ if [ "$WHD_ARGS" = "start" ]; then
 			WHD_PORT=$DEFAULT_PORT
 		else
 			WHD_PORT=
-		fi 
+		fi
 	fi
 	if [ ! "$WHD_PORT" -a ! "$HTTPS_PORT" ]; then
 		echo
@@ -256,10 +293,18 @@ if [ "$WHD_ARGS" = "start" ]; then
 		exit 1
 	fi
 
+    echo "$(date "+%F %T"): Staring the Web Help Desk...">>$WHD_HOME/log/startup.log
+
+    PORT_TO_CHECK=$WHD_PORT
+    check_port
+    PORT_TO_CHECK=$HTTPS_PORT
+    check_port
+
 	# -----------------------------------------------------------------
 	# Start the PostgreSQL server
 	if [ "$(uname -s)" = "Linux" -a "$EMBEDDED" = "true" ]; then
-		$WHD_HOME/bin/pgsql/etc/rc.d/init.d/postgresql-9.2 start
+		$WHD_HOME/setup_whd_embedded_db.sh
+		# $WHD_HOME/bin/pgsql/etc/rc.d/init.d/postgresql-9.2 start
 	fi
 
 	# -----------------------------------------------------------------
@@ -276,8 +321,8 @@ if [ "$WHD_ARGS" = "start" ]; then
 		# mail.jar and activation.jar are now located in WEB-INF/lib because mail.jar
 		# must be loaded by same classloader that loads activation frameworks, and
 		# Java 6 includes the activation framework.
-		rm $WHD_HOME/bin/webapps/helpdesk/WEB-INF/Library/Frameworks/MacsDesignWidgets.framework/Resources/Java/mail.jar 
-		rm $WHD_HOME/bin/webapps/helpdesk/WEB-INF/Library/Frameworks/MacsDesignWidgets.framework/Resources/Java/activation.jar 
+		rm $WHD_HOME/bin/webapps/helpdesk/WEB-INF/Library/Frameworks/MacsDesignWidgets.framework/Resources/Java/mail.jar
+		rm $WHD_HOME/bin/webapps/helpdesk/WEB-INF/Library/Frameworks/MacsDesignWidgets.framework/Resources/Java/activation.jar
 	fi
 
 	# nh 6/30/09: xerces-1.2.3.jar has been replaced with xerces.jar in order to facilitate replacement updates in later versions
@@ -290,7 +335,7 @@ if [ "$WHD_ARGS" = "start" ]; then
 	# These seem to appear only on Solaris systems. Not sure yet how they get there.
 
 	rm $WHD_HOME/bin/webapps/helpdesk/WEB-INF/lib/._*.jar >/dev/null 2>&1
-	
+
 	# Copy over unlimited strength crypto policy files if necessary
 	# No longer needed with bundled Java 1.7
 	#update_jce_policy_files
@@ -302,12 +347,12 @@ if [ "$WHD_ARGS" = "start" ]; then
 
 	# -----------------------------------------------------------------
 	# Create files from originals if necessary
-	
+
 	SERVER_XML_TEMPLATE="$WHD_HOME/conf/tomcat_server_template.xml"
 	SERVER_XML_OUTPUT="$CATALINA_HOME/conf/server.xml"
 	WEB_XML_TEMPLATE="$WHD_HOME/conf/tomcat_web_template.xml"
 	WEB_XML_OUTPUT="$WHD_HOME/bin/webapps/helpdesk/WEB-INF/web.xml"
-	
+
 	cp $SERVER_XML_TEMPLATE $SERVER_XML_OUTPUT
 	cp $WEB_XML_TEMPLATE $WEB_XML_OUTPUT
 
@@ -374,22 +419,35 @@ if [ "$WHD_ARGS" = "start" ]; then
 		if [ ! -e $KEYSTORE_FILE ]; then
 
 			echo
-			echo "Could not find keystore at $KEYSTORE_FILE."
-			echo "(A keystore is required for SSL.)"
-			echo "Creating default keystore. Storing new self-signed, anonymous"
-			echo "certificate for alias 'tomcat' with a password of '$KEYSTORE_PASS'."
-			echo "See README.txt for information on changing the certificate."
+			STARTUP_MESSAGE="Could not find keystore at $KEYSTORE_FILE (a keystore is required for SSL)."
+			show_and_log_message
+			STARTUP_MESSAGE="Creating default keystore. Storing new self-signed, anonymous"
+			show_and_log_message
+			STARTUP_MESSAGE="certificate for alias 'tomcat' with a password of '$KEYSTORE_PASS'."
+			show_and_log_message
+			STARTUP_MESSAGE="See README.txt for information on changing the certificate."
+			show_and_log_message
 			echo
 
-			$JAVA_HOME/bin/keytool -genkey -keystore $KEYSTORE_FILE -alias tomcat -keyalg RSA -dname "CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown" -keypass $KEYSTORE_PASS -storepass $KEYSTORE_PASS -validity 712
-			ERROR_CODE=$?
-			if [ ! $ERROR_CODE -eq 0 ]; then
+			create_certificate
+		else
+			$JAVA_HOME/bin/keytool -list -keystore $KEYSTORE_FILE -storepass $KEYSTORE_PASS | grep "PrivateKeyEntry" &> /dev/null
+			CERT_ERROR_CODE=$?
+			if [ $CERT_ERROR_CODE -ne 0 ]; then
+			$JAVA_HOME/bin/keytool -list -keystore $KEYSTORE_FILE -storepass $KEYSTORE_PASS >> $WHD_HOME/log/startup.log
 				echo
-				echo "ERROR: Could not create keystore."
+				STARTUP_MESSAGE="Could not find certificate with alias 'tomcat' at $KEYSTORE_FILE with a password of '$KEYSTORE_PASS'."
+				show_and_log_message
+				STARTUP_MESSAGE="Creating new self-signed, anonymous"
+				show_and_log_message
+				STARTUP_MESSAGE="certificate for alias 'tomcat' with a password of '$KEYSTORE_PASS'."
+				show_and_log_message
+				STARTUP_MESSAGE="See README.txt for information on changing the certificate."
+				show_and_log_message
 				echo
-				exit 1
-			fi
 
+				create_certificate
+			fi
 		fi
 
 		sed -e "s/@@@WEBHELPDESK_SSL_PORT@@@/$HTTPS_PORT/" $SERVER_XML_OUTPUT > $SERVER_XML_OUTPUT.1 2>&1 /dev/null
@@ -401,7 +459,7 @@ if [ "$WHD_ARGS" = "start" ]; then
 		rm $SERVER_XML_OUTPUT.1
 		#mv $SERVER_XML_OUTPUT.1 $SERVER_XML_OUTPUT
 	fi
-	
+
 	# -----------------------------------------------------------------
 	# If both HTTP and HTTPS are enabled, turn on automatic forwarding from HTTP to HTTPS
 	if [[ "$NO_REDIRECT" != "true" && $WHD_PORT && $HTTPS_PORT ]]; then
@@ -410,7 +468,7 @@ if [ "$WHD_ARGS" = "start" ]; then
 		rm $WEB_XML_OUTPUT.1
 		#mv $WEB_XML_OUTPUT.1 $WEB_XML_OUTPUT
 	fi
-	
+
 	# -----------------------------------------------------------------
 	# Set up base URL for private Spring/WebObjects communication
 	if [ $HTTPS_PORT ]; then
@@ -427,7 +485,7 @@ if [ "$WHD_ARGS" = "start" ]; then
 		if [ ! $URL_DEFAULT_PORT ]; then
 			URL_DEFAULT_PORT=-1
 		fi
-			
+
 	fi
 	if [ ! $URL_HTTPS_PORT ]; then
 		URL_HTTPS_PORT=$HTTPS_PORT
@@ -457,7 +515,7 @@ if [ "$WHD_ARGS" = "start" ]; then
 	if [ $HTTPS_PORT ]; then
 		REDIRECT_PORT=$HTTPS_PORT
 	else
-		REDIRECT_PORT=443
+		REDIRECT_PORT=8443
 	fi
 
 	ADDRESS_SETTING=""
@@ -498,13 +556,13 @@ elif [ "$WHD_ARGS" = "stop" ]; then
 	if [ "$(uname -s)" = "Linux" -a "$EMBEDDED" = "true" ]; then
 		$WHD_HOME/bin/pgsql/etc/rc.d/init.d/postgresql-9.2 stop
 	fi
-      
+
 elif [ "$WHD_ARGS" = "restart" ]; then
   echo "Restarting the Web Help Desk..."
 	shift
 	WHD_ARGS=$1
   $PRG stop $WHD_ARGS >/dev/null 2>&1
-	sleep 3
+	sleep 10
   $PRG start $WHD_ARGS #>/dev/null 2>&1
 else
 	echo "Invalid argument."
