@@ -1,11 +1,22 @@
 ﻿Solarwinds/dpa:[tag]
 =========
 
-This is a Dockerized version of [Database performance Analyzer](http://www.solarwinds.com/database-performance-monitoring-software).  This is based on the RHEL rpm installed on a CentOS 6 base.
+This is a Dockerized version of [Database performance Analyzer](http://www.solarwinds.com/database-performance-monitoring-software).  This is based on the RHEL rpm installed on a CentOS 8 base.
 
 The primary purpose of the document is to explain the steps involved in deploying DPA Docker image on to Docker store/hub. This could be first step in exploring the feasibility of moving other products (related and non-related) to Containers to cut down the build and deploy time for products that are under maintenance. Please refer Docker Best Practices for creating Docker file.
 
-#Docker File 
+# DPA
+
+Deploying this SolarWinds DPA product from the Docker Hub repository is quick and easy.  You’ll be up and running in a few minutes, ready to monitor your multi-vendor databases spanning across hybrid environments. 
+
+Included is a fully functional, 14-day evaluation key for your product, but you can contact our sales team at `sales@solarwinds.com` to extend your evaluation or purchase a BYOL perpetual license with a first-year paid software maintenance agreement.
+ 
+By pulling and running this SolarWinds DPA Docker image, you are expressly agreeing to our [SolarWinds End User License Agreement](https://www.solarwinds.com/legal/eula).  
+
+**Please do not use this product if you are not in agreement with the terms and conditions.**
+
+
+# Docker File 
 ```Dockerfile
 # Version: 0.0.1
 
@@ -32,18 +43,18 @@ ENTRYPOINT ["/run.sh"]
 ```
 Here is the docker build command that is used to create DPA Docker image. The tag or image name should match the namespace or username/respository name created on the docker hub account.
 
-#Docker Build 
+# Docker Build 
 ```sh
 docker build -t solarwinds/dpa:latest .
 ```
 
-#Note
+# Note
 
 Currently, DPA does not allow silent install, so when you build docker image, you cannot install the dpa application. So it has to be done from with in the container itself and issue a docker commit to update the image before pushing it to docker hub
 
 The command to login and push the image to docker hub repository is provided below.
 
-#Docker Push 
+# Docker Push 
 ```sh
 docker login --username={username}
 ```
@@ -53,20 +64,20 @@ This will prompt you to enter the docker hub account password. On successfully l
 docker push solarwinds/dpa:latest 
 ```
 
-#Docker Pull 
+# Docker Pull 
 ```sh
 docker pull solarwinds/dpa[:latest]
 ```
  
 Once the docker image is built or pulled from docker hub, Here is the docker run command to start the container. This will create DPA container and start the process. This will run the container in the daemon mode.
 
-#Docker Run 
+# Docker Run 
 ```sh
 docker run -d -p 8123:8123  -p 8124:8124 --name=dpainstance solarwinds/dpa:latest
 ```
 
 
-Configure DPA Through Browser:
+# Configure DPA Through Browser:
 ----
 
 1. Open Web Browser: localhost:8123 for http and 8124 for https
