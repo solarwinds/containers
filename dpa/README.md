@@ -78,10 +78,7 @@ docker run -d -p 8123:8123  -p 8124:8124 --name=dpainstance solarwinds/dpa:lates
 
 
 # Configure DPA Through Browser:
-----
-
 1. Open Web Browser: localhost:8123 for http and 8124 for https
 2. Set up Database Repository of your choice
-"
 
 
