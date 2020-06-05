@@ -1,4 +1,4 @@
-﻿Solarwinds/dpa:[tag]
+﻿Solarwinds Database performance Analyzer
 =========
 
 This is a Dockerized version of [Database performance Analyzer](http://www.solarwinds.com/database-performance-monitoring-software).  This is based on the RHEL rpm installed on a CentOS 8 base.
