@@ -28,6 +28,12 @@ RUN ln -s /usr/lib64/libcrypto.so.1.1 /usr/lib64/libcrypto.so.10
 RUN ln -s /usr/lib64/libssl.so.1.1 /usr/lib64/libssl.so.10
 RUN ln -s /usr/lib64/libreadline.so.7 /usr/lib64/libreadline.so.6
 RUN chmod 744 /run.sh && chmod 644 $WHD_HOME/*.properties && chmod 755 $WHD_HOME/whd && chmod 744 $WHD_HOME/*.sh && chmod 755 $WHD_HOME/bin/whd 
+RUN yum -y install crontabs
+RUN sed -i -e '/pam_loginuid.so/s/^/#/' /etc/pam.d/crond
+ADD cron /etc/cron.d/cron_test
+RUN chmod 744 /etc/cron.d/cron_test
+RUN crontab /etc/cron.d/cron_test
+
 EXPOSE 8081
 
 ENTRYPOINT ["/run.sh"]
